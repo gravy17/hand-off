@@ -1,0 +1,128 @@
+.container {
+	width: 80%;
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 0;
+}
+
+.row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.col {
+	width: 100%;
+}
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+	max-height: 100%;
+  max-width: 100%;
+	object-fit: cover;
+  pointer-events: none;
+}
+
+.logo-container {
+	display: flex;
+	align-self: stretch;
+	width: 20%;
+}
+
+h1, h2 {
+	font-family: "Noto Sans JP";
+	font-weight: 700;
+	text-shadow: 1px 1px 8px black;
+}
+
+.App-title {
+	margin: 0.5em;
+}
+
+.title-container {
+	align-self: center;
+	margin: 0 auto;
+	padding: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+/*Colors:
+Green = hsl(130, 80, 31)
+Orange = hsl(35, 84, 39)
+White = hsl(242, 100, 98)
+Default paddings 1.5em
+Border-radiuses 3 px
+Box-shadows 0px 1px 6px
+reg font- "Inconsolata", monospace
+header fonts- "Oxygen", sans-serif
+*/
+
+.App-header {
+  min-height: 3em;
+  font-size: calc(10px + 2vmin);
+  color: hsl(242, 100%, 98%);
+	background-color: hsl(35, 84%, 39%);
+	padding: 1px;
+  text-align: center;
+  box-shadow: 0 2px 6px black;
+  z-index: 1;
+  position: sticky;
+  transition: top 350ms ease-out 50ms;
+}
+
+.nav__list {
+	list-style: none;
+	justify-content: flex-start;
+	padding: 0;
+}
+
+.nav__link {
+	text-decoration: none;
+	text-shadow: 1px 1px 8px black;
+	color: hsl(242, 100%, 98%);
+	font-size: 1.3em;
+	font-weight: 400;
+	font-family: "Noto Sans JP", monospace;
+	padding: 0.5em;
+	white-space: nowrap;
+	position: relative;
+}
+
+.nav__link::before {
+    content: "";
+    display: block;
+    height: 3px;
+		text-shadow: 0px 2px 8px black;
+    background: #fff;
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    transform: scale(1, 0);
+    transition: transform ease 250ms;
+  }
+  .nav__link:hover::before,
+  .nav__link:focus::before, .nav__link:active::before, .nav--active::before  {
+    transform: scale(1, 1);
+  }
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
