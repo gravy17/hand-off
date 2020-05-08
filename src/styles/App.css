@@ -1,5 +1,9 @@
+:root {
+
+}
+
 .container {
-	width: 80%;
+	width: 85%;
 	max-width: 1100px;
 	margin: 0 auto;
 	padding: 0;
@@ -35,7 +39,16 @@
 h1, h2 {
 	font-family: "Noto Sans JP";
 	font-weight: 700;
-	text-shadow: 1px 1px 8px black;
+	text-shadow: 1px 1px 4px black;
+	letter-spacing: 0.05em;
+}
+
+p {
+	overflow-wrap: word-break;
+	max-width: 100%;
+	line-height: 1.4em;
+	letter-spacing: 0.04em;
+	overflow: scroll;
 }
 
 .App-title {
@@ -55,27 +68,41 @@ h1, h2 {
 }
 
 /*Colors:
-Green = hsl(130, 80, 31)
-Orange = hsl(35, 84, 39)
-White = hsl(242, 100, 98)
+Green = hsl(39, 92, 56)
+Orange-Yellow = hsl(39, 92, 56)
+White
 Default paddings 1.5em
 Border-radiuses 3 px
 Box-shadows 0px 1px 6px
-reg font- "Inconsolata", monospace
+reg font- "Noto Sans JP", monospace
 header fonts- "Oxygen", sans-serif
 */
+body::after{
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: hsl(0, 0%, 75%);
+}
 
 .App-header {
+	position: sticky;
+	top: 0;
   min-height: 3em;
   font-size: calc(10px + 2vmin);
-  color: hsl(242, 100%, 98%);
-	background-color: hsl(35, 84%, 39%);
+  color: #fff;
+	background-color: hsl(39, 92%, 56%);
 	padding: 1px;
   text-align: center;
   box-shadow: 0 2px 6px black;
-  z-index: 1;
-  position: sticky;
+  z-index: 2;
   transition: top 350ms ease-out 50ms;
+}
+
+.App-header--hidden {
+  top: calc(-44px - 8vmin);
 }
 
 .nav__list {
@@ -86,11 +113,12 @@ header fonts- "Oxygen", sans-serif
 
 .nav__link {
 	text-decoration: none;
-	text-shadow: 1px 1px 8px black;
-	color: hsl(242, 100%, 98%);
+	text-shadow: 1px 1px 3px black;
+	color: #fff;
 	font-size: 1.3em;
 	font-weight: 400;
 	font-family: "Noto Sans JP", monospace;
+	letter-spacing: 0.05em;
 	padding: 0.5em;
 	white-space: nowrap;
 	position: relative;
@@ -100,7 +128,7 @@ header fonts- "Oxygen", sans-serif
     content: "";
     display: block;
     height: 3px;
-		text-shadow: 0px 2px 8px black;
+		box-shadow: 0px 2px 6px black;
     background: #fff;
     position: absolute;
     bottom: -1px;
@@ -125,4 +153,143 @@ header fonts- "Oxygen", sans-serif
   to {
     transform: rotate(360deg);
   }
+}
+.page{
+	position: relative;
+	z-index: 1;
+}
+button:hover {
+	opacity: 0.75;
+}
+/*Chat Component styles
+*/
+.chat__header {
+	position: sticky;
+	top: 0;
+	background-color: #fff;
+	color: hsl(123, 23%, 27%);
+	justify-content: center;
+	min-height: 50px;
+	font-size: 1.15em;
+	border-bottom: 1px solid hsl(0, 0%, 75%);
+	padding: 0.5em;
+	box-shadow: 0 1px 4px gray;
+}
+.chat__name {
+	margin: 0 auto;
+}
+.userlist {
+	margin: 0;
+	background-color: #fff;
+	color: hsl(123, 23%, 27%);
+	justify-content: center;
+	list-style: none;
+	padding: 0;
+	border-bottom: 1px solid hsl(0, 0%, 75%);
+}
+.userlist__name {
+	padding: 0.7em;
+	border-bottom: 1px solid hsl(0, 0%, 75%);
+	display: flex;
+	justify-content: center;
+	box-shadow: 0 2px 6px gray;
+	font-weight: 600;
+}
+.userlist__toggle {
+	position: absolute;
+	right: 0.5em; bottom: 0;
+	height: 100%;
+	border: none;
+	background-color: #fff;
+	color: hsl(123, 23%, 27%);
+	padding: 12px 16px;
+	font-size: 1.2em;
+	cursor: pointer;
+
+}
+.online-dot {
+  width: 0.5em;
+	height: 0.5em;
+	border-radius: 0.25em;
+	margin-right: 0.5em;
+	background-color: hsl(123, 50%, 50%);
+	display: inline-block;
+	align-self: center;
+}
+.chat__messages {
+	margin: 0;
+	background-color: hsl(0, 0%, 75%);
+	padding-bottom: 5em;
+	position: sticky;
+}
+.msgcontainer {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 1100px;
+}
+.outMessage, .inMessage {
+	width: 70%;
+	max-width: 500px;
+	box-shadow: 0 1px 4px grey;
+	padding: 0.5em 1em;
+	position: relative;
+	margin: 0.4em 2px;
+	padding-bottom: 1.5em;
+	text-align:left;
+	overflow: hidden;
+}
+.inMessage {
+	align-self: flex-start;
+	background-color: #fff;
+	border-radius: 0.3em 1em 0.6em;
+}
+.outMessage {
+	align-self: flex-end;
+	background-color: hsl(123, 23%, 27%);
+	color: #fff;
+	border-radius: 0.6em 1em 0.3em;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+.msginfo {
+	font-size: 0.5em;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 95%;
+	padding: 0;
+	margin: 0;
+	text-align: right;
+}
+.chat__input {
+	position: fixed;
+	bottom: 0; left: 0;
+	width: 100%;
+	display: flex;
+	align-items: stretch;
+}
+.message__input {
+	border: 1px solid hsl(0, 0%, 75%);
+	font-size: 1.6em;
+	height: 3.5em;
+	position: relative;
+	box-shadow: 0 -2px 6px gray;
+	padding: 0.5em 2.5em 0.5em 0.5em;
+}
+.send__button {
+	position: absolute;
+	right:0.8em; top: 0.8em;
+	border: none;
+	border-radius: 5px;
+	color: hsl(123, 23%, 27%);
+	background-color: hsl(39, 92%, 56%);
+	padding: 12px 16px;
+	font-size: 1.1em;
+	cursor: pointer;
+	border-radius: 5em;
+	box-shadow: 0 1px 4px black;
+}
+* {
+	//border: 1px solid red;
 }

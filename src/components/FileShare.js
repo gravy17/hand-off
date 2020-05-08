@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 class FileShare extends Component {
   render() {
     return (
-      <div>
+      <div className="container page">
         <p>
           File Sharing
         </p>

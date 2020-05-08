@@ -4,9 +4,9 @@ import {Link} from 'react-router-dom';
 class Error extends Component {
   render() {
     return (
-      <div>
+      <div className="container page">
         <p>
-        	Error
+        	Error: 404 Not Found
             <Link to="/">Home</Link>
         </p>
       </div>

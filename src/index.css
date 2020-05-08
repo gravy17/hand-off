@@ -1,6 +1,7 @@
 *, *::before, *::after {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	border: 1px solid green;
 }
 
 /*Colors:
@@ -17,6 +18,8 @@ header fonts- "Oxygen", sans-serif
 
 body {
   margin: 0;
+	height: 100%;
+	width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Oxygen', 'Segoe UI', 'Roboto',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;

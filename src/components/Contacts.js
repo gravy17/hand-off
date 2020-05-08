@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 class Contacts extends Component {
   render() {
     return (
-      <div>
+      <div className="container page">
         <p>
           Contacts
             <Link to="/call">Calls</Link>
