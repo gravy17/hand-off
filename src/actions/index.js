@@ -9,9 +9,9 @@ export const outgoingMsg = (msg, sender, datetime, roomid) => ({
 	roomid
 })
 
-export const incomingMsg = (msg, sender, datetime, roomid) => ({
+export const incomingMsg = (msg, sender, id, roomid) => ({
 	type: types.INCOMING_MSG,
-	id: datetime,
+	id: id,
 	msg,
 	sender,
 	roomid
@@ -35,10 +35,10 @@ export const onlineUsers = (onlineUsers) => ({
 	onlineUsers
 })
 
-//action creators for room creation, joining and listing a user's rooms
-export const userRooms = (uid) => ({
+//action creators for room creation, joining and listing  rooms
+export const userRooms = (rooms) => ({
 	type: types.USER_ROOMS,
-	id: uid
+	 rooms
 })
 
 export const createRoom = (roomName, uid, name) => ({

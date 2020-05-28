@@ -2,31 +2,44 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {BrowserRouter} from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
-
-//Move this elsewhere when logic to take name as user is added
+import { createStore, applyMiddleware } from 'redux';
+import createSagaMiddleware from 'redux-saga';
 import { v5 as uuidv5 } from 'uuid';
-import * as uid from './constants/Namespace';
-//
+
 import defaultName from './name-gen.js';
-import { addContact } from './actions';
+import setupSocket from './socket';
 import combinedReducer from './reducers';
 import './index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
+import handleNewMessage from './sagas';
+import * as uid from './constants/Namespace';
 
-const appStore = createStore(combinedReducer);
+const sagaMiddleware = createSagaMiddleware();
+const appStore = createStore(combinedReducer, applyMiddleware(sagaMiddleware));
+let registered = false;
 
-//Move this elsewhere when logic to take name as user is added
-const name = defaultName;
-appStore.dispatch(addContact(name, uuidv5(name, uid.NAMESPACE)))
-//
+let name = null
+const defaultId = uuidv5(defaultName, uid.NAMESPACE);
+if (localStorage.getItem("handoff-user")===null) {
+	while(true){
+	name = prompt("Please enter a unique name or confirm the generated name below", defaultName);
+	if (name !== null){
+	localStorage.setItem("handoff-user", JSON.stringify({id: defaultId, name: name}));
+	break;}
+	}
+} else {
+	registered = true;
+}
+const user = JSON.parse(localStorage.getItem("handoff-user"));
+const socket = setupSocket(appStore.dispatch, name, defaultId, registered, user);
+sagaMiddleware.run(handleNewMessage, {socket, user});
 
 ReactDOM.render(
   <React.StrictMode>
 		<Provider store={appStore}>
 			<BrowserRouter>
-	    	<App />
+	    	<App user={user}/>
 			</BrowserRouter>
 		</Provider>
   </React.StrictMode>,

@@ -1,8 +1,7 @@
 import * as types from '../constants/ActionTypes';
 import {DEFAULT_ROOM} from '../constants/Namespace';
-import defaultName from '../name-gen.js';
 
-const rooms = (state = [{id: DEFAULT_ROOM, roomUsers:[defaultName], roomName:'General'}], action) => {
+const rooms = (state = [{id: DEFAULT_ROOM, roomUsers:[], roomName:'General'}], action) => {
 		switch (action.type) {
 			case types.CREATE_ROOM:
 				return state.concat([{
@@ -17,7 +16,7 @@ const rooms = (state = [{id: DEFAULT_ROOM, roomUsers:[defaultName], roomName:'Ge
 				let newState = state.splice(index, 1, roomUpdate); //create new state with modified room
 				return newState;
 			case types.USER_ROOMS:
-				return state.filter(room => room.roomUsers.includes(action.id)); //search rooms for a user id
+				return action.rooms;
 			default:
 				return state;
 		}

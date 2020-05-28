@@ -73,11 +73,11 @@ class App extends Component {
         </header>
         <main>
           <Switch>
-            <Route exact path='/' component={Contacts} />
-            <Route path='/chat' component={() => <ChatContainer newRoomId={DEFAULT_ROOM}/>} />
-            <Route path='/file-share' component={FileShare} />
-            <Route path='/call' component={Call} />
-            <Route path='/details' component={Details} />
+            <Route exact path='/' component={() => <Contacts user={this.props.user}/>} />
+            <Route path='/chat' component={() => <ChatContainer user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
+            <Route path='/file-share' component={() => <FileShare user={this.props.user}/>} />
+            <Route path='/call' component={() => <Call user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
+            <Route path='/details' component={() => <Details/>} />
 						<Route component={Error}/>
           </Switch>
         </main>

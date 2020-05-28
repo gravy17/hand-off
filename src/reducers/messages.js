@@ -9,6 +9,7 @@ const messages = (state = [], action) => {
 					msg: action.msg,
 					sender: action.sender,
 					roomid: action.roomid }]);
+
 			default:
 				return state;
 		}

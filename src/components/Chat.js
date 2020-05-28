@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import defaultName from '../name-gen';
 import {outgoingMsg} from '../actions';
 import { v5 as uuidv5 } from 'uuid';
 import * as uid from '../constants/Namespace';
@@ -9,13 +8,14 @@ import * as uid from '../constants/Namespace';
 class Chat extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { input: '', chatName: null, viewusers: false};
+		this.state = { input: '', chatName: null, viewusers: true, self: props.user.name};
 		if(props.room.roomName) {
 			this.state.chatName = props.room.roomName;
 		}
 		this.submitMessage = this.submitMessage.bind(this);
 		this.handleChange = this.handleChange.bind(this);
 		this.userlistToggle = this.userlistToggle.bind(this);
+		this.scrollToBottom = this.scrollToBottom.bind(this);
 	}
 	componentDidMount () {
 		if(!this.state.viewusers)
@@ -30,8 +30,8 @@ class Chat extends Component {
 	}
 	submitMessage () {
 		if (this.state.input){
-		let datetime = new Date().toLocaleString();
-		this.props.dispatch(this.state.input, defaultName, datetime, this.props.room.id);
+		var datetime = new Date().toLocaleString();
+		this.props.dispatch(this.state.input, this.state.self, datetime, this.props.room.id);
 		this.setState({input: ''});
 	}
 	}
@@ -48,13 +48,14 @@ class Chat extends Component {
 		title = <section className="chat__header row"><h3 className="chat__name col">{this.state.chatName}</h3><button className="userlist__toggle" onClick={this.userlistToggle}><i className="fas fa-angle-double-down"></i></button></section>;}
 		//iterate through and display messages
 		const classifiedMessages = this.props.messages.map((message) =>
-			{	return (<Message message={message} key={message.id}/>); }
+			{	return (<Message message={message} key={message.id}
+			self={this.state.self}/>); }
 		);
 
     return (
       <div className="page">
 				{title}
-				<UserList users={this.props.room.roomUsers} visible={this.state.viewusers}/>
+				<UserList users={this.props.room.roomUsers} self={this.state.self} visible={this.state.viewusers}/>
 				<section className="chat__messages">
 				{classifiedMessages}
 				<div style={{ float:"left", clear: "both"}} ref={(el) => {this.messagesEnd = el;}}></div>
@@ -74,7 +75,7 @@ const UserList = (prop) => {
 		(<section className="userlist-view">
 			<ul className="userlist">
 				{prop.users.map((user) => {
-					return <User name={user} me={(user === defaultName)?'(Me)':null} key={uuidv5(user, uid.NAMESPACE)}/> }
+					return <User name={user} me={(user === prop.self)?'(Me)':null} key={uuidv5(user, uid.NAMESPACE)}/> }
 				)}
 			</ul>
 		</section>):null;
@@ -85,7 +86,7 @@ const User = (prop) => {
 }
 
 const Message = (prop) => {
-	return (prop.message.sender !== defaultName)?
+	return (prop.message.sender !== prop.self )?
 	(<div className="msgcontainer"><p className="inMessage col">{prop.message.msg}<span className="msginfo">From {prop.message.sender}@{prop.message.id}</span></p></div>):
 	(<div className="msgcontainer"><p className="outMessage col">{prop.message.msg}<span className="msginfo">From Me@{prop.message.id}</span></p></div>)}
 
@@ -101,6 +102,10 @@ Chat.propTypes = {
 		id: PropTypes.string.isRequired,
 		roomUsers: PropTypes.arrayOf(PropTypes.string).isRequired ,
 		roomName: PropTypes.string
+	}).isRequired,
+	user: PropTypes.shape({
+		id: PropTypes.string.isRequired,
+		name: PropTypes.string
 	}).isRequired
 }
 

@@ -7,8 +7,10 @@ const users = (state = [], action) => {
 			case types.REGISTER_USR:
 				return state.concat([{ id: action.id, name: action.name }]);
 			case types.RENAME_USR:
-				let index = state.find(user => user.id === action.id)
-					return state.splice(index, 1, [{ id: action.id, name: action.name }]);
+				let newstate = [...state];
+				let index = newstate.indexOf(user => user.id === action.id);
+				newstate.splice(index, 1, [{ id: action.id, name: action.name }])
+				return newstate;
 			default:
 				return state;
 		}
