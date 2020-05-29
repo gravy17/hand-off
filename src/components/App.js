@@ -8,12 +8,11 @@ import classnames from 'classnames';
 import '@fortawesome/fontawesome-free/css/all.css';
 
 import {ChatContainer} from './Chat';
-import {DEFAULT_ROOM} from '../constants/Namespace';
-import Contacts from './Contacts';
+import {ContactsContainer} from './Contacts';
 import FileShare from './FileShare';
 import Call from './Call';
-import Details from './Details';
 import Error from './Error';
+import {DEFAULT_ROOM} from '../constants/Namespace';
 import '../styles/App.css';
 //import logo from '../logo.svg';
 
@@ -73,11 +72,10 @@ class App extends Component {
         </header>
         <main>
           <Switch>
-            <Route exact path='/' component={() => <Contacts user={this.props.user}/>} />
-            <Route path='/chat' component={() => <ChatContainer user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
-            <Route path='/file-share' component={() => <FileShare user={this.props.user}/>} />
-            <Route path='/call' component={() => <Call user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
-            <Route path='/details' component={() => <Details/>} />
+            <Route exact path='/' render={(props) => <ContactsContainer {...props} user={this.props.user}/>} />
+            <Route path='/chat' render={(props) => <ChatContainer {...props} user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
+            <Route path='/file-share' render={(props) => <FileShare {...props} user={this.props.user}/>} />
+            <Route path='/call' render={(props) => <Call {...props} user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
 						<Route component={Error}/>
           </Switch>
         </main>

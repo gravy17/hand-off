@@ -1,9 +1,11 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+// import { v5 as uuidv5 } from 'uuid';
+
 import {outgoingMsg} from '../actions';
-import { v5 as uuidv5 } from 'uuid';
-import * as uid from '../constants/Namespace';
+import {UserList} from './UserList';
+// import * as uid from '../constants/Namespace';
 
 class Chat extends Component {
 	constructor(props) {
@@ -68,21 +70,6 @@ class Chat extends Component {
       </div>
     );
   }
-}
-
-const UserList = (prop) => {
-	return (prop.visible)?
-		(<section className="userlist-view">
-			<ul className="userlist">
-				{prop.users.map((user) => {
-					return <User name={user} me={(user === prop.self)?'(Me)':null} key={uuidv5(user, uid.NAMESPACE)}/> }
-				)}
-			</ul>
-		</section>):null;
-	}
-
-const User = (prop) => {
-	return (<li className="userlist__name"><span className="online-dot"></span>{prop.name} {prop.me}</li>)
 }
 
 const Message = (prop) => {

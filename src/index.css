@@ -4,16 +4,6 @@
 	box-sizing: border-box;
 }
 
-/*Colors:
-Green = hsl(130, 80, 31)
-Orange = hsl(35, 100, 30)
-White = hsl(242, 100, 98)
-Default paddings 1.5em
-Border-radiuses 3 px
-Box-shadows 0px 1px 6px
-reg font- "Inconsolata", monospace
-header fonts- "Oxygen", sans-serif
-*/
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Oxygen:wght@300;400;700&display=swap');
 
 body {

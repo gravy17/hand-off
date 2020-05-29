@@ -1,6 +1,10 @@
 :root {
 
 }
+button:hover, button:focus{
+	opacity: 0.7;
+	color: black;
+}
 
 .container {
 	width: 85%;
@@ -158,9 +162,6 @@ body::after{
 	position: relative;
 	z-index: 1;
 }
-button:hover {
-	opacity: 0.75;
-}
 /*Chat Component styles
 */
 .chat__header {
@@ -262,7 +263,7 @@ button:hover {
 	margin: 0;
 	text-align: right;
 }
-.chat__input {
+.chat__input{
 	position: fixed;
 	bottom: 0; left: 0;
 	width: 100%;
@@ -281,15 +282,176 @@ button:hover {
 	position: absolute;
 	right:0.8em; top: 0.8em;
 	border: none;
-	border-radius: 5px;
+	border-radius: 1em;
 	color: hsl(123, 23%, 27%);
 	background-color: hsl(39, 92%, 56%);
-	padding: 12px 16px;
+	padding: 0;
+	width: 4em;
+	height: 4em;
+	cursor: pointer;
+	border-radius: 2em;
+	box-shadow: 0 1px 4px black;
+}
+* {
+	//border: 1px solid red;
+}
+/*contacts styles*/
+.inputRow {
+	background-color: #fff;
+	display: flex;
+	align-items: stretch;
+	justify-content: space-between;
+}
+.call-input, .dl-input {
+	width: 80%;
+	border-radius: 0.3em;
+	font-size: 16px;
+	line-height: 20px;
+}
+
+.fab-row{
+	width: 35%;
+	height: 3em;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	position: fixed;
+	bottom: 3em;
+	right: 1.5em;
+}
+.audio-callbtn, .video-callbtn {
+	width: 3em;
+	height: 3em;
+	border: none;
+	border-radius: 1.5em;
+	background-color: hsl(39, 92%, 56%);
+	padding: 12px 12px;
 	font-size: 1.1em;
 	cursor: pointer;
 	border-radius: 5em;
 	box-shadow: 0 1px 4px black;
 }
-* {
-	//border: 1px solid red;
+.audio-callbtn{
+	color: hsl(123, 50%, 50%);
+}
+.video-callbtn {
+	color: hsl(3, 100%, 40%);
+}
+.smallbtn{
+	border-radius: 2px;
+	height: 2em; width: 2em;
+	margin: 0.4em 0.2em;
+	background-color: #fff;
+	box-shadow: unset;
+	padding: 0;
+}
+
+.error-page{
+	font-weight: 'Oxygen', sans-serif;
+	font-weight: 400;
+	background-color: #fff;
+	border-radius: 1em;
+	color: #36454f;
+	position: relative;
+	height: 60vh;
+	width: 80vw;
+	padding: 20%;
+	margin: 5vh auto;
+}
+
+.error-page>h1, .error-page>h2, .error-page>p{
+	text-shadow: unset;
+}
+
+.sharebtn, .dlbtn{
+	width: 80%;
+	height: 2.7em;
+	border: none;
+	border-radius: 1.5em;
+	background-color: hsl(39, 92%, 56%);
+	padding: 12px 12px;
+	font-size: 1.2em;
+	cursor: pointer;
+	border-radius: 5em;
+	box-shadow: 0 1px 4px black;
+	border-radius: 0.3em;
+}
+
+input[type="text"]{
+	font-size: 20px;
+}
+
+.dl-input{
+	position: relative;
+	margin: 10vh auto 0.5em auto;
+	justify-content: center;
+	height: 3em;
+}
+
+.sharebtn{
+	position: fixed;
+	left: 10%;
+	bottom: 15%;
+}
+
+.call{
+	position: fixed;
+	bottom:0;
+	left:0;
+	width: 100%;
+	height: 100%;
+	z-index: 2;
+	background: hsla(123, 100%, 10%, 0.64);
+	background: linear-gradient(0deg, rgba(0,0,0,0.94) 0%, rgba(0,22,1,0.97) 37%, rgba(0,65,3,1) 100%);
+}
+
+.callbtns{
+	position: absolute;
+	bottom: 5vh;
+	left: 20%;
+	width: 60%;
+	justify-content: space-between;
+}
+
+ .mutebtn, .novideo-btn, .endcall-btn {
+	width: 3em;
+	height: 3em;
+	border: none;
+	border-radius: 1.5em;
+	background-color: hsla(0,0%,45%,0.7);
+	padding: auto;
+	font-size: 1.2em;
+	cursor: pointer;
+	border-radius: 5em;
+	box-shadow: 0 1px 4px black;
+	z-index: 4;
+}
+
+i{
+	font-size: 24px;
+}
+
+.closebtn{
+	position: absolute;
+	right: 1.3em;
+	top: 1.3em;
+	color: hsla(0,0%,45%,0.7);
+	background: transparent;
+	border: none;
+}
+
+.mutebtn{
+	/*  */
+}
+
+.novideo-btn{
+	/*  */
+}
+
+.endcall-btn{
+	background-color: hsla(0,100%,50%,0.9);
+}
+
+.activeCallCtrl{
+	background-color: #fff;
 }
