@@ -44,12 +44,25 @@ export const userRooms = (rooms) => ({
 export const createRoom = (roomName, uid, name) => ({
 	type: types.CREATE_ROOM,
 	id: uid,
-	roomUsers: [name],
-	roomName
+	roomName: roomName,
+	roomUsers: [name]
 })
 
 export const joinRoom = (uid, name) => ({
 	type: types.JOIN_ROOM,
 	id: uid,
 	newUser: name
+})
+
+//action creators for call feeds
+export const feeds = (feeds) => ({
+	type: types.FEEDS,
+	 feeds
+})
+
+export const addFeed = (stream, sender, roomid) => ({
+	type: types.ADD_FEED,
+	src: stream,
+	sender: sender,
+	roomid: roomid
 })

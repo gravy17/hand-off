@@ -11,7 +11,7 @@ export const UserList = (prop) => {
 				{prop.users.map((user) => {
 					return <User name={(typeof(user)=='string')?user:user.name}
 					id = {(typeof(user)=='string')?null:user.id}
-					me={(user === prop.self)?'(Me)':null} key={(typeof(user)=='string')?uuidv5(user, uid.NAMESPACE):user.id}/> }
+					me={(user === prop.self)?'(Me)':null} key={(typeof(user)=='string')?uuidv5( user,uid.NAMESPACE):user.id}/> }
 				)}
 			</ul>
 		</section>):null;

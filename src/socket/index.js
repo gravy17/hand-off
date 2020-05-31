@@ -1,5 +1,5 @@
 import * as types from '../constants/ActionTypes';
-import {addContact, renameUser, onlineUsers, incomingMsg, userRooms} from '../actions/index';
+import {addContact, renameUser, onlineUsers, incomingMsg, userRooms, addFeed, createRoom, joinRoom} from '../actions/index';
 
 const setupSocket = (dispatch, defaultName, defaultId, registered=false, storedCredentials) => {
 	//attempt upgraded webrtc p2p, else use websocket
@@ -33,11 +33,27 @@ const setupSocket = (dispatch, defaultName, defaultId, registered=false, storedC
 			case types.OUTGOING_MSG:
 				dispatch(incomingMsg(data.msg, data.sender, data.id, data.roomid))
 				break;
+			case types.ADD_FEED:
+				dispatch(addFeed(data.src,
+				data.sender,
+				data.roomId))
+				break;
 			case types.USERS:
 				dispatch(onlineUsers(data.onlineUsers))
 				break;
 			case types.USER_ROOMS:
 				dispatch(userRooms(data.rooms))
+				break;
+			case types.CREATE_ROOM:
+			  dispatch(createRoom(
+					data.id,
+					data.roomName,
+					data.roomUsers))
+				break;
+			case types.JOIN_ROOM:
+				dispatch(joinRoom(
+					data.id,
+					data.newUser))
 				break;
 			default:
 				break;

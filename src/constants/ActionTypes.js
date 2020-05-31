@@ -6,3 +6,5 @@ export const USERS = 'USERS';
 export const CREATE_ROOM = 'CREATE_ROOM';
 export const JOIN_ROOM = 'JOIN_ROOM';
 export const USER_ROOMS = 'USER_ROOMS';
+export const ADD_FEED = 'ADD_FEED';
+export const FEEDS = 'FEEDS';

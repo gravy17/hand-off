@@ -10,7 +10,7 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import {ChatContainer} from './Chat';
 import {ContactsContainer} from './Contacts';
 import FileShare from './FileShare';
-import Call from './Call';
+import {CallContainer} from './Call';
 import Error from './Error';
 import {DEFAULT_ROOM} from '../constants/Namespace';
 import '../styles/App.css';
@@ -75,7 +75,7 @@ class App extends Component {
             <Route exact path='/' render={(props) => <ContactsContainer {...props} user={this.props.user}/>} />
             <Route path='/chat' render={(props) => <ChatContainer {...props} user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
             <Route path='/file-share' render={(props) => <FileShare {...props} user={this.props.user}/>} />
-            <Route path='/call' render={(props) => <Call {...props} user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
+            <Route path='/call' render={(props) => <CallContainer {...props} user={this.props.user}/>} />
 						<Route component={Error}/>
           </Switch>
         </main>

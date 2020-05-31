@@ -20,13 +20,11 @@ const appStore = createStore(combinedReducer, applyMiddleware(sagaMiddleware));
 let registered = false;
 
 let name = null
-const defaultId = uuidv5(defaultName, uid.NAMESPACE);
+const defaultId = uuidv5(defaultName,uid.NAMESPACE);
 if (localStorage.getItem("handoff-user")===null) {
-	while(true){
 	name = prompt("Please enter a unique name or confirm the generated name below", defaultName);
 	if (name !== null){
 	localStorage.setItem("handoff-user", JSON.stringify({id: defaultId, name: name}));
-	break;}
 	}
 } else {
 	registered = true;

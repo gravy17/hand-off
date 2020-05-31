@@ -411,6 +411,7 @@ input[type="text"]{
 	left: 20%;
 	width: 60%;
 	justify-content: space-between;
+	z-index: 4;
 }
 
  .mutebtn, .novideo-btn, .endcall-btn {
@@ -427,6 +428,10 @@ input[type="text"]{
 	z-index: 4;
 }
 
+.mutebtn:focus, .novideo-btn:focus, .endcall-btn:focus {
+	opacity: unset;
+}
+
 i{
 	font-size: 24px;
 }
@@ -438,14 +443,11 @@ i{
 	color: hsla(0,0%,45%,0.7);
 	background: transparent;
 	border: none;
+	z-index: 4;
 }
 
-.mutebtn{
-	/*  */
-}
-
-.novideo-btn{
-	/*  */
+.mutebtn, .novideo-btn {
+	opacity: 0.6;
 }
 
 .endcall-btn{
@@ -454,4 +456,33 @@ i{
 
 .activeCallCtrl{
 	background-color: #fff;
+	opacity: 1;
+}
+
+.feedLayer {
+	position: absolute;
+	bottom:0;
+	left:0;
+	width: 100%;
+	height: 100%;
+	z-index: 3;
+}
+
+.feed {
+	position: relative;
+	margin: 0; padding: 0; display: inline-block; border: none;
+	background-color: hsla(0,0%,0%,0.7);
+}
+
+.feedtitle {
+	color: #fff;
+	position: absolute;
+	bottom: 15%;
+	margin: 0 auto;
+	width: 100%;
+	text-align: center;
+}
+
+video {
+	object-fit: cover;
 }

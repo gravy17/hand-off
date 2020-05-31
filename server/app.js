@@ -103,6 +103,45 @@ wss.on('connection', (ws) => {
 				}, ws)
 				break;
 			}
+			case 'ADD_FEED': {
+				broadcast({
+					type: 'ADD_FEED',
+					src: data.src,
+					sender: data.sender,
+					roomid: data.roomid
+				}, ws)
+				break;
+			}
+			case 'JOIN_ROOM': {
+				let roomIndex = rooms.findIndex(room => room.id === data.id);
+				if (roomIndex < 0){
+					rooms[roomIndex].roomUsers.push(data.newUser);
+				} else { break; }
+				broadcast({
+					type: 'JOIN_ROOM',
+					id: data.id,
+					newUser: data.newUser
+				}, ws)
+				break;
+			}
+			case 'CREATE_ROOM': {
+				rooms.push({
+					id: data.id,
+					roomName: data.roomName,
+					roomUsers: data.roomUsers
+				})
+				broadcast({
+					type: 'USER_ROOMS',
+					rooms
+				}, ws)
+				// broadcast({
+				// 	type: 'CREATE_ROOM',
+				// 	id: data.id,
+				// 	roomName: data.roomName,
+				// 	roomUsers: data.roomUsers
+				// }, ws)
+				break;
+			}
 			default:
 				break;
 		}

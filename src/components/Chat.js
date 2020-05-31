@@ -1,11 +1,9 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-// import { v5 as uuidv5 } from 'uuid';
 
 import {outgoingMsg} from '../actions';
 import {UserList} from './UserList';
-// import * as uid from '../constants/Namespace';
 
 class Chat extends Component {
 	constructor(props) {
