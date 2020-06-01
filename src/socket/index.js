@@ -3,7 +3,7 @@ import {addContact, renameUser, onlineUsers, incomingMsg, userRooms, addFeed, cr
 
 const setupSocket = (dispatch, defaultName, defaultId, registered=false, storedCredentials) => {
 	//attempt upgraded webrtc p2p, else use websocket
-	const socket = new WebSocket('ws://10.238.69.201:8989')//Must be changed to the IP of the server
+	const socket = new WebSocket('ws://10.238.69.201:'+(process.env.PORT||8000))//Must be changed to the IP of the server
 
 	socket.onopen = () => {
 		if (!registered) {
