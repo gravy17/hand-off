@@ -6,10 +6,10 @@ const users = (state = [], action) => {
 				return action.onlineUsers;
 			case types.REGISTER_USR:
 				return state.concat([{ id: action.id, name: action.name }]);
-			case types.RENAME_USR:
+			case types.REMOVE_USR:
 				let newstate = [...state];
 				let index = newstate.indexOf(user => user.id === action.id);
-				newstate.splice(index, 1, [{ id: action.id, name: action.name }])
+				newstate.splice(index, 1);
 				return newstate;
 			default:
 				return state;

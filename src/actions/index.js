@@ -24,10 +24,9 @@ export const addContact = (name, uid) => ({
 	name
 })
 
-export const renameUser = (name, uid) => ({
-	type: types.RENAME_USR,
-	id: uid,
-	name
+export const removeUser = (uid) => ({
+	type: types.REMOVE_USR,
+	id: uid
 })
 
 export const onlineUsers = (onlineUsers) => ({
@@ -52,6 +51,11 @@ export const joinRoom = (uid, name) => ({
 	type: types.JOIN_ROOM,
 	id: uid,
 	newUser: name
+})
+
+export const removeUserFromRooms = (name) => ({
+	type: types.RM_FROM_ROOMS,
+	name: name
 })
 
 //action creators for call feeds

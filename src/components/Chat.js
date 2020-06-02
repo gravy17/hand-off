@@ -2,22 +2,38 @@ import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import {outgoingMsg} from '../actions';
+import {outgoingMsg, createRoom, joinRoom} from '../actions';
 import {UserList} from './UserList';
 
 class Chat extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { input: '', chatName: null, viewusers: true, self: props.user.name};
-		if(props.room.roomName) {
-			this.state.chatName = props.room.roomName;
-		}
+		this.state = { input: '', viewusers: true, self: props.user.name};
 		this.submitMessage = this.submitMessage.bind(this);
 		this.handleChange = this.handleChange.bind(this);
 		this.userlistToggle = this.userlistToggle.bind(this);
 		this.scrollToBottom = this.scrollToBottom.bind(this);
+		// console.log(JSON.stringify(props));
 	}
 	componentDidMount () {
+		let curr = prompt("Confirm room id below:\n ", this.props.location.state.room );
+		if(curr && this.props.location.state.room !== curr){
+			this.props.enter(curr, this.props.user.name);
+			this.forceUpdate();
+			setTimeout(this.props.history.push(
+				{ pathname: '/chat/'+curr,
+					state: {
+						room: curr,
+						type: 'chat'
+					}
+				}
+			), 1000);
+		} else {
+			if (!this.props.room){
+				this.props.create("Room-".concat(this.props.user.name), this.props.location.state.room, this.props.user.name); this.forceUpdate(); return;}
+			if (!this.props.room.roomUsers.length || !this.props.room.roomUsers.includes(this.props.user.name)){
+				this.props.enter(this.props.location.state.room, this.props.user.name);this.forceUpdate();}
+		}
 		if(!this.state.viewusers)
 		{this.scrollToBottom();}
 	}
@@ -44,8 +60,8 @@ class Chat extends Component {
   render() {
 		//display chat name if exists
 		let title = null;
-		if (this.state.chatName){
-		title = <section className="chat__header row"><h3 className="chat__name col">{this.state.chatName}</h3><button className="userlist__toggle" onClick={this.userlistToggle}><i className="fas fa-angle-double-down"></i></button></section>;}
+		if (this.props.room){
+		title = <section className="chat__header row"><h3 className="chat__name col">{this.props.room.roomName}</h3><button className="userlist__toggle" onClick={this.userlistToggle}><i className="fas fa-angle-double-down"></i></button></section>;}
 		//iterate through and display messages
 		const classifiedMessages = this.props.messages.map((message) =>
 			{	return (<Message message={message} key={message.id}
@@ -55,7 +71,7 @@ class Chat extends Component {
     return (
       <div className="page">
 				{title}
-				<UserList users={this.props.room.roomUsers} self={this.state.self} visible={this.state.viewusers}/>
+				<UserList users={this.props.room?this.props.room.roomUsers:[]} self={this.state.self} visible={this.state.viewusers}/>
 				<section className="chat__messages">
 				{classifiedMessages}
 				<div style={{ float:"left", clear: "both"}} ref={(el) => {this.messagesEnd = el;}}></div>
@@ -96,14 +112,20 @@ Chat.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
 	return {
-		room: state.rooms.find(chat => chat.id === ownProps.newRoomId),
-		messages: state.messages.filter(message => message.roomid === ownProps.newRoomId)
+		room: state.rooms.find(chat => chat.id === ownProps.location.state.room ),
+		messages: state.messages.filter(message => message.roomid === ownProps.location.state.room)
 	}
 }
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch, ownProps) => ({
 	dispatch: (msg, sender, datetime, roomid) => {
 		dispatch(outgoingMsg(msg, sender, datetime, roomid))
+	},
+	create: (roomName, roomid, name) => {
+		dispatch(createRoom(roomName, roomid, name))
+	},
+	enter: (uid, name) => {
+		dispatch(joinRoom(uid, name))
 	}
 })
 

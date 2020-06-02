@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import {addFeed} from '../actions';
+import {addFeed, createRoom, joinRoom} from '../actions';
 
 let media = {};
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
@@ -13,8 +13,9 @@ let dimensions = [vw, vh];
 class Call extends Component {
 	constructor(props) {
 		super(props);
-		console.log(JSON.stringify(this.props));
-		var n = props.room.roomUsers.length;
+		var n = 1;
+		if(props.room){
+		n = props.room.roomUsers.length;}
 		var visibility = false;
 		if(props.location.state.type==="video"){
 			visibility = true;
@@ -33,14 +34,35 @@ class Call extends Component {
 			media = {audio: true,
 			video: false}
 		}
+		// console.log(JSON.stringify(this.props));
 	}
 
 	componentDidMount() {
 		try {
 	 		navigator.mediaDevices.getUserMedia(media, this.handleVideo, this.videoError);
+
 		}
 		catch (err) {
 			console.log("error: "+err);
+		}
+		if (!this.props.room){
+			let curr = prompt("Confirm room id below:\n ", this.props.location.state.room );
+			if(curr && this.props.location.state.room !== curr){
+				this.props.enter(curr, this.props.user.name);
+				this.forceUpdate();
+				setTimeout(this.props.history.push(
+					{ pathname: '/call/'+curr,
+						state: {
+							room: curr,
+							type: this.props.location.state.type
+						}
+					}
+				), 1000);
+			}
+		}else {
+			if (!this.props.room.roomUsers.length || !this.props.room.roomUsers.includes(this.props.user.name)){
+				this.props.enter(this.props.location.state.room, this.props.user.name);this.forceUpdate();
+			}
 		}
 	}
 
@@ -98,14 +120,16 @@ class Call extends Component {
 	}
 
  	static getDerivedStateFromProps (props, state) {
-		if(state.n !== props.room.roomUsers.length){
-			const newN = props.room.roomUsers.length;
-			const newGrid = this.calcGrid(vh, vw, newN);
-			dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
-			return ({...state, grid: newGrid, n: newN, feedDimension: dimensions});
+		if(props.room){
+			if(state.n !== props.room.roomUsers.length){
+				const newN = props.room.roomUsers.length;
+				const newGrid = this.calcGrid(vh, vw, newN);
+				dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
+				return ({...state, grid: newGrid, n: newN, feedDimension: dimensions});
+			}
+			else
+			{return state}
 		}
-		else
-		{return state}
 	}
 
 	componentWillUnmount () {
@@ -192,9 +216,15 @@ const mapStateToProps = (state, ownProps) => {
 	});
 }
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch, ownProps) => ({
 	dispatch: (stream, sender, roomid) => {
 		dispatch(addFeed(stream, sender, roomid))
+	},
+	create: () => {
+		dispatch(createRoom("Room-".concat(ownProps.user.name), ownProps.location.state.room, ownProps.user.name))
+	},
+	enter: () => {
+		dispatch(joinRoom(ownProps.location.state.room, ownProps.user.name))
 	}
 })
 

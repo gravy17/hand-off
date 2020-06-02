@@ -17,20 +17,20 @@ import * as uid from './constants/Namespace';
 
 const sagaMiddleware = createSagaMiddleware();
 const appStore = createStore(combinedReducer, applyMiddleware(sagaMiddleware));
-let registered = false;
 
-let name = null
-const defaultId = uuidv5(defaultName,uid.NAMESPACE);
+let name = null;
+let defaultId = '';
 if (localStorage.getItem("handoff-user")===null) {
-	name = prompt("Please enter a unique name or confirm the generated name below", defaultName);
-	if (name !== null){
-	localStorage.setItem("handoff-user", JSON.stringify({id: defaultId, name: name}));
-	}
-} else {
-	registered = true;
+	do{
+		defaultId = uuidv5(defaultName,uid.NAMESPACE);
+		name = prompt("Please enter a unique name or confirm the generated name below", defaultName);
+		if (name !== null){
+		localStorage.setItem("handoff-user", JSON.stringify({id: defaultId, name: name}));
+		}
+	} while(!name);
 }
 const user = JSON.parse(localStorage.getItem("handoff-user"));
-const socket = setupSocket(appStore.dispatch, name, defaultId, registered, user);
+const socket = setupSocket(appStore.dispatch, user);
 sagaMiddleware.run(handleNewMessage, {socket, user});
 
 ReactDOM.render(

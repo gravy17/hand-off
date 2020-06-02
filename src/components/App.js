@@ -63,7 +63,7 @@ class App extends Component {
 	               <li className="nav__item col">
 								 	<NavLink exact={true} to="/" id="navcontacts" className="nav__link" activeClassName="nav--active">Contacts</NavLink></li>
 	               <li className="nav__item col">
-								 	<NavLink to="/chat" className="nav__link" activeClassName="nav--active">Chat</NavLink></li>
+								 	<NavLink to={{ pathname: '/chat/'.concat(DEFAULT_ROOM), state: {room: DEFAULT_ROOM, type: 'chat'} }} className="nav__link" activeClassName="nav--active">Chat</NavLink></li>
 	               <li className="nav__item col">
 								 	<NavLink to="/file-share" className="nav__link" activeClassName="nav--active">Share</NavLink></li>
 	             </ul>
@@ -73,7 +73,7 @@ class App extends Component {
         <main>
           <Switch>
             <Route exact path='/' render={(props) => <ContactsContainer {...props} user={this.props.user}/>} />
-            <Route path='/chat' render={(props) => <ChatContainer {...props} user={this.props.user} newRoomId={DEFAULT_ROOM}/>} />
+            <Route path='/chat' render={(props) => <ChatContainer {...props} user={this.props.user}/>} />
             <Route path='/file-share' render={(props) => <FileShare {...props} user={this.props.user}/>} />
             <Route path='/call' render={(props) => <CallContainer {...props} user={this.props.user}/>} />
 						<Route component={Error}/>
