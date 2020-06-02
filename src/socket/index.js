@@ -1,17 +1,24 @@
 import * as types from '../constants/ActionTypes';
 import {addContact, removeUser, incomingMsg, addFeed, createRoom, joinRoom, removeUserFromRooms} from '../actions/index';
-import io from 'socket.io-client';
+
+var P2P = require('socket.io-p2p');
+var io = require('socket.io-client');
 
 const ENDPOINT = 'https://hand-off-server.herokuapp.com/';
 
 const setupSocket = (dispatch, storedCredentials) => {
-	const socket = io(ENDPOINT);
+	var socket = io(ENDPOINT);
 	socket.emit('hello', {id: storedCredentials.id,	name: storedCredentials.name});
-	//attempt upgraded webrtc p2p
 
-	//else use websocket
+	//attempt upgrade to webrtc p2p
+	var p2pSock = new P2P(socket, {autoUpgrade: true}, () => {console.log("Upgrading to WebRTC...");});
+
+	p2pSock.on('ready', function(){
+		p2pSock.usePeerConnection = true;
+		alert("Now using WebRTC Peer Connection");
+	})
 	//respond to messages
-	socket.on('message', (data) => {
+	p2pSock.on('peer-msg', (data) => {
 		switch (data.type) {
 		case types.REGISTER_USR:
 			dispatch(addContact(data.name, data.id))
@@ -46,7 +53,7 @@ const setupSocket = (dispatch, storedCredentials) => {
 		}
 	})
 
-	return socket
+	return p2pSock
 }
 
 export default setupSocket;
