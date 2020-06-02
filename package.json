@@ -1,15 +1,25 @@
 {
   "name": "hand-off",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.13.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "classnames": "^2.2.6",
+    "custom-env": "^2.0.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-redux": "^7.2.0",
     "react-router-dom": "^5.1.2",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "redux": "^4.0.5",
+    "redux-saga": "^1.1.3",
+    "socket.io": "^2.3.0",
+    "socket.io-p2p": "^2.2.0",
+    "uuid": "^8.0.0",
+    "ws": "^7.2.5"
   },
   "scripts": {
     "start": "react-scripts start",
