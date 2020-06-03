@@ -68,7 +68,10 @@ class Call extends Component {
 
 	handleVideo(stream) {
 		console.log(stream);
-		this.setState({ stream: stream}); this.props.dispatch(stream, this.state.self, this.props.room.roomid);
+		const localVideo = document.getElementById("myFeed");
+		if(localVideo){
+		localVideo.srcObject = stream; this.props.dispatch(stream, this.state.self, this.props.room.roomid);
+	} else {console.log("Local Video container missing")}
 	}
 
 	videoError(err) {
@@ -167,7 +170,6 @@ class Call extends Component {
       <div className="page call">
 				<div className="feedLayer">
 				<div className="feed"><video id="myFeed" autoPlay width={this.state.feedDimension[0]} height={this.state.feedDimension[1]}>
-					<source src={this.state.stream}/>
 				</video><h5 className="feedtitle">"Me"</h5>
 				</div>
 				{videoFeeds}

@@ -24,6 +24,12 @@ export const addContact = (name, uid) => ({
 	name
 })
 
+export const peerContact = (name, uid) => ({
+	type: types.PEER_REGISTER,
+	id: uid,
+	name
+})
+
 export const removeUser = (uid) => ({
 	type: types.REMOVE_USR,
 	id: uid
@@ -47,8 +53,21 @@ export const createRoom = (roomName, uid, name) => ({
 	roomUsers: [name]
 })
 
+export const peerCreate = (roomName, uid, name) => ({
+	type: types.PEER_CREATE,
+	id: uid,
+	roomName: roomName,
+	roomUsers: [name]
+})
+
 export const joinRoom = (uid, name) => ({
 	type: types.JOIN_ROOM,
+	id: uid,
+	newUser: name
+})
+
+export const peerJoin = (uid, name) => ({
+	type: types.PEER_JOIN,
 	id: uid,
 	newUser: name
 })
@@ -66,6 +85,13 @@ export const feeds = (feeds) => ({
 
 export const addFeed = (stream, sender, roomid) => ({
 	type: types.ADD_FEED,
+	src: stream,
+	sender: sender,
+	roomid: roomid
+})
+
+export const peerFeed = (stream, sender, roomid) => ({
+	type: types.PEER_FEED,
 	src: stream,
 	sender: sender,
 	roomid: roomid

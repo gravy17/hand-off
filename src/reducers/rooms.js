@@ -3,11 +3,13 @@ import {DEFAULT_ROOM} from '../constants/Namespace';
 
 const rooms = (state = [{id: DEFAULT_ROOM, roomUsers: [], roomName:'General Chat'}], action) => {
 		switch (action.type) {
+			case types.PEER_CREATE:
 			case types.CREATE_ROOM:
 				return state.concat([{
 					id: action.id,
 					roomUsers: action.roomUsers,
 					roomName: action.roomName }]);
+			case types.PEER_JOIN:
 			case types.JOIN_ROOM: //find room by id
 				const index = state.findIndex(room => room.id === action.id);
 				const room = state[index];
