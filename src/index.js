@@ -12,7 +12,7 @@ import combinedReducer from './reducers';
 import './index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
-import handleNewMessage from './sagas';
+import rootSaga from './sagas';
 import * as uid from './constants/Namespace';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -31,7 +31,7 @@ if (localStorage.getItem("handoff-user")===null) {
 }
 const user = JSON.parse(localStorage.getItem("handoff-user"));
 const socket = setupSocket(appStore.dispatch, user);
-sagaMiddleware.run(handleNewMessage, {socket, user});
+sagaMiddleware.run(rootSaga, {socket, user});
 
 ReactDOM.render(
   <React.StrictMode>
