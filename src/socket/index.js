@@ -4,7 +4,7 @@ import {peerContact, removeUser, incomingMsg, peerFeed, peerCreate, peerJoin, re
 var P2P = require('socket.io-p2p');
 var io = require('socket.io-client');
 
-const ENDPOINT = 'https://hand-off-server.herokuapp.com/';//'ws://10.238.69.201:8989';
+const ENDPOINT = 'https://hand-off-server.herokuapp.com/';
 
 const setupSocket = (dispatch, storedCredentials) => {
 	var socket = io(ENDPOINT);
