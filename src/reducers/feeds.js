@@ -4,8 +4,6 @@ const feeds = (state = [], action) => {
 		switch (action.type) {
 			case types.PEER_FEED:
 			case types.ADD_FEED:
-				console.log(action.sender)
-				console.log(action.roomid)
 				return state.concat([{
 					src: action.src,
 					sender: action.sender,

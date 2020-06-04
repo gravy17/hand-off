@@ -10,18 +10,22 @@ const setupSocket = (dispatch, storedCredentials) => {
 	var socket = io(ENDPOINT);
 	socket.emit('hello', {type: types.REGISTER_USR, id: storedCredentials.id, name: storedCredentials.name})
 	//attempt upgrade to webrtc p2p
-	var p2pSock = new P2P(socket, {autoUpgrade: true}, () => {
-		alert("Upgraded to WebRTC...");
-		socket.emit('hello', {type: types.REGISTER_USR, id: storedCredentials.id, name: storedCredentials.name})
-	});
+	var p2pSock = new P2P(socket, {autoUpgrade: true});
 
-	p2pSock.on('ready', function(){
-		p2pSock.usePeerConnection = true;
-		console.log("Now using WebRTC Peer Connection");
+	p2pSock.on('upgrade', function(){
+		alert("Now using WebRTC Peer Connection!")
+		socket.emit('hello', {type: types.REGISTER_USR, id: storedCredentials.id, name: storedCredentials.name})
 	})
 
 	p2pSock.on('hello', (data) => {
-		p2pSock.emit('peer-msg', {type: types.REGISTER_USR, id: data.id, name: data.name})
+		alert("New WebRTC Peer!\nHello from "+data.name)
+		socket.emit('peer-msg', {type: types.REGISTER_USR, id: data.id, name: data.name})
+	})
+
+	p2pSock.on('peer-error', (err) => {
+		alert(`WebRTC Peer Connection Failure:
+			${err}`
+		);
 	})
 
 	p2pSock.on('peer-msg', (data) => {
@@ -39,7 +43,6 @@ const setupSocket = (dispatch, storedCredentials) => {
 			dispatch(incomingMsg(data.msg, data.sender, data.id, data.roomid))
 			break;
 		case types.ADD_FEED:
-			console.log("NEW FEED!: ")
 			dispatch(peerFeed(data.src, data.sender, data.roomId))
 			break;
 		case types.CREATE_ROOM:
