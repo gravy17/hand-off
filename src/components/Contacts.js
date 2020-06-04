@@ -27,7 +27,7 @@ class Contacts extends Component {
 		var t = new Date().toLocaleString();
 		var str = this.state.self.concat(t);
 		var newId = uuidv5(str, uid.NAMESPACE);
-		alert("Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n" + newId);
+		alert("Edit, Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n" + newId);
 		this.props.create(("Room-").concat(this.state.self),newId, this.state.self);
 	  this.props.history.push(
 			{ pathname: '/call/'+newId,

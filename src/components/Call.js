@@ -22,8 +22,8 @@ function Call(props) {
 			setStream(stream);
 			if(myFeed.current) {
 				myFeed.current.srcObject = stream;
+				props.dispatch(stream, props.user?.name, props.room?.roomid)
 			}
-			props.dispatch(stream, props.user?.name, props.room?.roomid)
 		})
 	});
 
@@ -37,8 +37,8 @@ function Call(props) {
 				})
 			}
 		}
-		console.log(props.room.roomUsers)
 		console.log(props.feeds.length)
+		console.log(props.location.state.room)
 	}, [props.feeds, remoteFeeds, props.room.roomUsers]);
 
 	function toggleMute() {
@@ -54,10 +54,14 @@ function Call(props) {
 	}
 
 	function killStreams(){
+		myFeed.pause()
 		if (myFeed.current) {
 			myFeed.current.srcObject.getTracks().forEach(track => track.stop());
 			myFeed.current.srcObject = null;
 		}
+		setVisible(false);
+		setAudible(false);
+		setStream(null);
 		if (remoteFeeds.current?.length) {
 			remoteFeeds.current.forEach(feed => {
 				feed.srcObject.getTracks().forEach(track => track.stop());
@@ -124,14 +128,13 @@ Call.propTypes = {
 	}).isRequired
 }
 
-Call.defaultProps = {
-	feeds: []
-};
+// Call.defaultProps = {
+// 	feeds: []
+// };
 
 const mapStateToProps = (state, ownProps) => {
 	return({
 		room: state.rooms.find(call => call.id === ownProps.location.state.room),
-
 		feeds: state.feeds.filter(feed => feed.roomid === ownProps.location.state.room)
 	});
 }
