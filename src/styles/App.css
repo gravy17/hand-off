@@ -244,6 +244,8 @@ body::after{
 	align-self: flex-start;
 	background-color: #fff;
 	border-radius: 0.3em 1em 0.6em;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
 }
 .outMessage {
 	align-self: flex-end;
@@ -375,6 +377,7 @@ body::after{
 	border-radius: 5em;
 	box-shadow: 0 1px 4px black;
 	border-radius: 0.3em;
+	margin-bottom: 3em;
 }
 
 input[type="text"]{
@@ -382,16 +385,10 @@ input[type="text"]{
 }
 
 .dl-input{
-	position: relative;
-	margin: 10vh auto 0.5em auto;
+	margin: 3em auto 0.5em auto;
 	justify-content: center;
 	height: 3em;
-}
-
-.sharebtn{
-	position: fixed;
-	left: 10%;
-	bottom: 15%;
+	width: 80%;
 }
 
 .call{
@@ -469,14 +466,13 @@ i{
 }
 
 .feed {
-	position: relative;
 	margin: 0; padding: 0; display: inline-block; border: none;
-	background-color: hsla(0,0%,0%,0.7);
+	background-color: hsla(0,0%,0%,0.7); position: relative;
 }
 
 .feedtitle {
-	color: #fff;
 	position: absolute;
+	color: #fff;
 	bottom: 15%;
 	margin: 0 auto;
 	width: 100%;
@@ -485,4 +481,9 @@ i{
 
 video {
 	object-fit: cover;
+	z-index: 3;
+}
+
+#file-container {
+ width: 80%;
 }

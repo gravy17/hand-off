@@ -3,12 +3,12 @@ import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import {addFeed, createRoom, joinRoom} from '../actions';
+import {addFeed, joinRoom} from '../actions';
 
 let media = {};
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-let dimensions = [vw, vh];
+let dimensions = [vw*8/10, vh*2/5];
 
 class Call extends Component {
 	constructor(props) {
@@ -20,36 +20,20 @@ class Call extends Component {
 		if(props.location.state.type==="video"){
 			visibility = true;
 		}
-		const newGrid = this.calcGrid(vh, vw, n);
-		dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
-
-		this.state = {self: props.user.name, visible: visibility, audible: true, n: n, grid:newGrid, feedDimension: dimensions, stream: null};
+		// const newGrid = this.calcGrid(vh, vw, n);
+		this.state = {self: props.user.name, visible: visibility, audible: true, n: n, feedDimension: dimensions, stream: null, loading: false};
 		this.toggleMute = this.toggleMute.bind(this);
 		this.toggleVideo = this.toggleVideo.bind(this);
-		if(visibility){
-			media = {audio: true,
-			video: {width: dimensions[0], height: dimensions[1]}
-			}
-		} else {
-			media = {audio: true,
-			video: false}
-		}
-		// console.log(JSON.stringify(this.props));
+		media = {audio: true, video: visibility}
+		this.localVideo = React.createRef();
+		this.remoteFeeds = React.createRef();
 	}
 
 	componentDidMount() {
-		try {
-	 		navigator.mediaDevices.getUserMedia(media, this.handleVideo, this.videoError);
-
-		}
-		catch (err) {
-			console.log("error: "+err);
-		}
 		if (!this.props.room){
 			let curr = prompt("Confirm room id below:\n ", this.props.location.state.room );
 			if(curr && this.props.location.state.room !== curr){
 				this.props.enter(curr, this.props.user.name);
-				this.forceUpdate();
 				setTimeout(this.props.history.push(
 					{ pathname: '/call/'+curr,
 						state: {
@@ -57,119 +41,86 @@ class Call extends Component {
 							type: this.props.location.state.type
 						}
 					}
-				), 1000);
+				), 500);
 			}
 		}else {
 			if (!this.props.room.roomUsers.length || !this.props.room.roomUsers.includes(this.props.user.name)){
-				this.props.enter(this.props.location.state.room, this.props.user.name);this.forceUpdate();
+				this.props.enter(this.props.location.state.room, this.props.user.name);
+				setTimeout(this.forceUpdate(), 500);
 			}
 		}
+		this.setState({ loading: true}, async()=> {
+			let usrMedia = await navigator.mediaDevices.getUserMedia(media);
+			console.log(this.localVideo.current);
+			alert("streaming may fail if following is '{}':\n\n"+JSON.stringify(navigator.mediaDevices))
+			alert("About to set media\n" +JSON.stringify(this.localVideo.current));
+			this.localVideo.current.srcObject = usrMedia;
+			this.props.dispatch(usrMedia, this.state.self, this.props.room.roomid);
+			this.setState({
+				loading: false,
+				stream: usrMedia
+			})
+		})
 	}
 
+	// componentDidUpdate() {
+	// }
+
 	handleVideo(stream) {
-		console.log(stream);
-		const localVideo = document.getElementById("myFeed");
-		if(localVideo){
-		localVideo.srcObject = stream; this.props.dispatch(stream, this.state.self, this.props.room.roomid);
-	} else {console.log("Local Video container missing")}
+
 	}
 
 	videoError(err) {
 		console.log("error: "+err);
 	}
 
-	componentDidUpdate (){
-		let visibility = (typeof media.video !== 'object');
-		if(media.audio !== this.state.audible||visibility !== this.state.visible){
-			if(this.state.visible){
-				media = {audio: this.state.audible,
-				video: {width: this.state.feedDimension[0], height: this.state.feedDimension[1]}}
-			} else {
-				media = {audio: this.state.audible,
-				video: false};
-			}
-			try {
-		 		navigator.mediaDevices.getUserMedia(media, this.handleVideo, this.videoError);
-			}
-			catch (err) {
-				console.log("error: "+err);
-			}
-		}
-	}
-
-	calcGrid (vh, vw, n) {
-		if (n === 1){
-			return [1, 1];//w*h
-		}
-		//Deriving grid by highest common factor of n obtained via remainder method for a*b =c, where n is c and a and b are factors
-		var a = 2; var c = n;
-		while(a<c){
-			if (c%a === 0){
-				c/=a;
-			} else {
-				a++;
-			}
-		} var b = c/a;
-		if (b < a){
-			c = b;
-			b = a;
-			a = c;
-		}
-		if (vh > vw) {
-			return [a,b];
-		} else {
-			return [b,a];
-		}
-	}
-
- 	static getDerivedStateFromProps (props, state) {
-		if(props.room){
-			if(state.n !== props.room.roomUsers.length){
-				const newN = props.room.roomUsers.length;
-				const newGrid = this.calcGrid(vh, vw, newN);
-				dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
-				return ({...state, grid: newGrid, n: newN, feedDimension: dimensions});
-			}
-			else
-			{return state}
-		}
-	}
-
 	componentWillUnmount () {
-		if(this.state.stream){	this.state.stream.getTracks().forEach(track => track.stop());}
+		if(this.localVideo.current.srcObject){	this.localVideo.current.srcObject.getTracks().forEach(track => track.stop());
+		this.localVideo.current.srcObject = null;}
 
-		if(this.props.feeds.length){
-			this.props.feeds.forEach(feed => {
-				feed.src.getTracks().forEach(track => track.stop());
+		if(this.remoteFeeds.current?.length){
+			this.remoteFeeds.current.forEach(feed => {
+				feed.srcObject.getTracks().forEach(track => track.stop());
+				feed.srcObject = null
 			})
 		}
 	}
 
 	toggleMute () {
-		this.setState({
-			audible: !this.state.audible
-		})
+		media.audio = !this.state.audible
+		this.setState((state)=> ({
+			audible: !state.audible
+		}))
+		if(this.localVideo.current.srcObject){	this.localVideo.current.srcObject.getAudioTracks().forEach(track => track.applyConstraints(media));}
 	}
 
 	toggleVideo () {
-		this.setState({
-			visible : !this.state.visible
-		})
+		media.video = !this.state.visible
+		this.setState((state)=> ({
+			visible : !state.visible
+		}))
+		if(this.localVideo.current.srcObject){	this.localVideo.current.srcObject.getVideoTracks().forEach(track => track.applyConstraints(media));}
 	}
 
   render() {
 		let videoFeeds;
 		if(this.props.feeds.length){
-			videoFeeds = this.props.feeds.map((feed) =>
+			videoFeeds = this.props.feeds.map((feed, index) =>
 				{ return (
-					<Feed feed={feed} dimensions={this.state.feedDimension} key={feed.sender} self={this.state.self}/>
+					<Feed feed={feed} index={index} dimensions={this.state.feedDimension} key={feed.sender} self={this.state.self}/>
 				); }
 			);
+			this.remoteFeeds= Array(this.props.feeds.length).fill().map((_, i)=> this.remoteFeeds[i] || React.createRef())
+			if(this.remoteFeeds.current.length){
+				this.props.feeds.forEach((feed, i) => {
+						this.remoteFeeds.current[i].srcObject = feed.src
+				})
+			}
 		}
     return (
       <div className="page call">
 				<div className="feedLayer">
-				<div className="feed"><video id="myFeed" autoPlay width={this.state.feedDimension[0]} height={this.state.feedDimension[1]}>
+				<div className="feed"><video id="myFeed" autoPlay ref={this.localVideo} width={this.state.feedDimension[0]} height={this.state.feedDimension[1]}>
 				</video><h5 className="feedtitle">"Me"</h5>
 				</div>
 				{videoFeeds}
@@ -188,7 +139,7 @@ class Call extends Component {
 }
 
 const Feed = (prop) => {
-	return (<div className="feed"><video autoPlay src={prop.feed.src} width={prop.dimensions[0]} height={prop.dimensions[1]}>
+	return (<div className="feed"><video autoPlay ref={this.remoteFeeds[prop.index]} width={prop.dimensions[0]} height={prop.dimensions[1]}>
 	</video><h5 className="feedtitle">{prop.feed.sender}</h5></div>)
 }
 
@@ -214,7 +165,7 @@ const mapStateToProps = (state, ownProps) => {
 	return({
 		room: state.rooms.find(call => call.id === ownProps.location.state.room),
 
-		feeds: state.feeds.filter(feed => feed.roomid === ownProps.location.state.room)
+		feeds: state.feeds//.filter(feed => feed.roomid === ownProps.location.state.room)
 	});
 }
 
@@ -222,12 +173,47 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 	dispatch: (stream, sender, roomid) => {
 		dispatch(addFeed(stream, sender, roomid))
 	},
-	create: () => {
-		dispatch(createRoom("Room-".concat(ownProps.user.name), ownProps.location.state.room, ownProps.user.name))
-	},
 	enter: () => {
 		dispatch(joinRoom(ownProps.location.state.room, ownProps.user.name))
 	}
 })
 
 export const CallContainer = connect(mapStateToProps, mapDispatchToProps)(Call);
+
+	// calcGrid (vh, vw, n) {
+	// 	if (n === 1){
+	// 		return [1, 1];//w*h
+	// 	}
+	// 	//Deriving grid by highest common factor of n obtained via remainder method for a*b =c, where n is c and a and b are factors
+	// 	var a = 2; var c = n;
+	// 	while(a<c){
+	// 		if (c%a === 0){
+	// 			c/=a;
+	// 		} else {
+	// 			a++;
+	// 		}
+	// 	} var b = c/a;
+	// 	if (b < a){
+	// 		c = b;
+	// 		b = a;
+	// 		a = c;
+	// 	}
+	// 	if (vh > vw) {
+	// 		return [a,b];
+	// 	} else {
+	// 		return [b,a];
+	// 	}
+	// }
+
+ 	// static getDerivedStateFromProps (props, state) {
+	// 	if(props.room){
+	// 		if(state.n !== props.room.roomUsers.length){
+	// 			const newN = props.room.roomUsers.length;
+	// 			const newGrid = this.calcGrid(vh, vw, newN);
+	// 			dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
+	// 			return ({...state, grid: newGrid, n: newN, feedDimension: dimensions});
+	// 		}
+	// 		else
+	// 		{return state}
+	// 	}
+	// }

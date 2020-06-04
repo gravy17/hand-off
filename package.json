@@ -19,6 +19,7 @@
     "socket.io": "^2.3.0",
     "socket.io-p2p": "^2.2.0",
     "uuid": "^8.0.0",
+    "webtorrent": "^0.108.6",
     "ws": "^7.2.5"
   },
   "scripts": {
