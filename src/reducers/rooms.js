@@ -25,6 +25,7 @@ const rooms = (state = [{id: DEFAULT_ROOM, roomUsers: [], roomName:'General Chat
 				room.roomUsers.push(action.newUser);
 				const newState = JSON.parse(JSON.stringify(state))
 				newState.splice(index, 1, room);
+				console.log(JSON.stringify(newState));
 				return newState;
 				} else {return state;}
 			case types.RM_FROM_ROOMS:

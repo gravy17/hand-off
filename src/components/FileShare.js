@@ -29,8 +29,9 @@ class FileShare extends Component {
 	}
 
 	handleDl() {
-		alert("Downloading. Please wait...");
 			client.add(this.state.torrId, (torrent) => {
+
+				alert("Downloading. Please wait...");
 				torrent.files.forEach((file) => {
 					file.appendTo('#file-container');
 					alert('download complete')

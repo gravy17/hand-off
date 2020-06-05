@@ -32,7 +32,7 @@ const PeerFeed = (props) => {
 }
 
 function Call(props) {
-	props.enter(props.location.state?.room, user.name);
+	props.enter(props.location.pathname.split(/call\//, 2)[1], user.name);
 	const [visible, setVisible] = useState((props.location.state?.type==="video")?true:false);
 	const [audible, setAudible] = useState(true);
 	const [dimensions, setDimensions] = useState([vw, vh]);
@@ -47,8 +47,9 @@ function Call(props) {
 	async function getFeed() {
 		try {
 			feed = await navigator.mediaDevices.getUserMedia(constraints);
-			props.dispatch(feed, props.user?.name, props.location.state?.room)
+			props.dispatch(feed, props.user?.name, props.location.pathname.split(/call\//, 2)[1])
 			myFeed.current.srcObject = feed;
+			console.log(feed)
 		} catch(err){
 			console.log(err);
 		}
