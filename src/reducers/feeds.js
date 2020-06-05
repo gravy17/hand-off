@@ -1,6 +1,7 @@
 import * as types from '../constants/ActionTypes';
 
 const feeds = (state = [], action) => {
+		console.log(action);
 		switch (action.type) {
 			case types.PEER_FEED:
 			case types.ADD_FEED:
