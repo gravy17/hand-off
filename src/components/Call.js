@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { v5 as uuidv5 } from 'uuid';
 
 import {addFeed, joinRoom} from '../actions';
+import * as uid from '../constants/Namespace';
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
@@ -46,6 +48,7 @@ function Call(props) {
 
 		navigator.mediaDevices.getUserMedia({ video: visible, audio: audible}).then(stream => {
 			if(!mountedRef.current) {
+				myFeed.current.srcObject = null;
 				return null
 			}
 			setStream(stream);
@@ -63,21 +66,23 @@ function Call(props) {
 		if((props.room?.roomUsers.length-1) !== peers.length){
 		//if new users join
 			setPeers(props.room?.roomUsers.filter(peer => peer !== user.name));
-			setRemoteFeeds( Array(peers.length).fill().map((_, i) => remoteFeeds[i] || React.createRef()) );
 			setDimensions([vw, vh/(peers.length+1)]);
+
+			if(peers.length){
+				setRemoteFeeds( Array(peers.length).fill().map((_, i) => remoteFeeds[i] || React.createRef()) );
+			}
 		}
 
-		if(peers.length){
+		if(remoteFeeds[0]?.current) {
 			peers.forEach((peer, i) => {
 				let peerFeeds = props.feeds.filter(feed => feed.sender = peer);
 				let latestFeed = peerFeeds[peerFeeds.length-1];
-				remoteFeeds.current[i].srcObject = latestFeed
+				remoteFeeds[i].current.srcObject = latestFeed
 			})
 		}
 	}, [props.room, props.feeds, remoteFeeds, peers, dimensions]);
 
 	useEffect(() => () => {
-		myFeed.current.srcObject = null;
 		mountedRef.current = false
 	}, []);
 
@@ -104,8 +109,12 @@ function Call(props) {
 	if (peers.length) {
 		RemoteFeeds = peers.map((peer, index) =>
 			{ return (
-				<div className="feed">
-					<video className="remote-feed" playsInline ref={remoteFeeds[index]} autoPlay key={index} width={dimensions[0]} height={dimensions[1]}/>
+				<div className="feed" style=
+				{{height: dimensions[1], backgroundColor: '#fff'}}
+					key={uuidv5(peer,uid.NAMESPACE)} >
+					<video className="remote-feed" playsInline
+					ref={remoteFeeds[index]} autoPlay
+					width={dimensions[0]} height={dimensions[1]}/>
 					<h5 className="feedtitle">{peer?peer:null}</h5>
 				</div>
 			); }
@@ -114,7 +123,7 @@ function Call(props) {
 
 	return (
 		<div className="call">
-			<div className="feedLayer">
+			<div className="feedLayer vertical-row">
 				<div className="feed">
 				{MyFeed}
 				<h5 className="feedtitle">{MyFeed?"Me":null}</h5>

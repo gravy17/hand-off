@@ -468,13 +468,10 @@ i{
 .feed {
 	margin: 0;
 	padding: 0;
-	display: inline-block;
 	border: none;
 	background-color: hsla(0,0%,0%,0.7);
 	position: relative;
-}
-
-.my-feed, .remote-feed {
+	width: 100%;
 }
 
 .feedtitle {
@@ -493,4 +490,9 @@ video {
 
 #file-container {
  width: 80%;
+}
+
+.vertical-row {
+	display: flex;
+	flex-direction: column-reverse;
 }
