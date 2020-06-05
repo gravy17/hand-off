@@ -472,6 +472,7 @@ i{
 	background-color: hsla(0,0%,0%,0.7);
 	position: relative;
 	width: 100%;
+	z-index: 3;
 }
 
 .feedtitle {
@@ -481,6 +482,7 @@ i{
 	margin: 0 auto;
 	width: 100%;
 	text-align: center;
+	z-index: 3;
 }
 
 video {
