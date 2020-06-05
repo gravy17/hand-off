@@ -18,7 +18,7 @@ class FileShare extends Component {
 		if(event.target.files){
 			client.seed(event.target.files, (torrent) => {
 				this.setState({seedURI: torrent.magnetURI, seedHash: torrent.infoHash})
-				prompt("Seeding...\nCopy and share the infoHash below to peers through the chat: ", torrent.infoHash)
+				prompt("Seeding...\nCopy and share the magnetURI below to peers through the chat: ", torrent.magnetURI)
 			})
 			this.setState({upfiles: event.target.files});
 		}
