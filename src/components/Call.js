@@ -213,7 +213,7 @@ function Call({ /*dispatch, enter, */room: { id, roomUsers, roomName}, location,
 		RemoteFeeds = peers.map((peer, index) =>
 			// pass PeerFeed component a feed and dimensions
 			{ return (
-				<PeerFeed key={uuidv5((index+peer),uid.NAMESPACE)} {/*feed*/}sender={remoteFeeds[index].current} dimensions={dimensions}/>
+				<PeerFeed key={uuidv5((index+peer),uid.NAMESPACE)} sender={remoteFeeds[index].current} dimensions={dimensions}/>
 			); }
 		);
 	}
