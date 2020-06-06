@@ -4,22 +4,98 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { v5 as uuidv5 } from 'uuid';
 
-import {addFeed, joinRoom} from '../actions';
+import {/*addFeed,*/ joinRoom} from '../actions';
 import * as uid from '../constants/Namespace';
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-window.URL = window.URL || window.webkitURL;
 let feed;
+let stream;
+const ENDPOINT = 'https://hand-off-server.herokuapp.com/';
 
-const PeerFeed = ({feed, dimensions}) => {
+var io = require('socket.io-client')
+const socket = io.connect(ENDPOINT);
+
+const peerConnections = {}
+let subscriber;
+const config = {
+	iceServers: [
+		{
+			urls: ["stun:stun.l.google.com:19302"]
+		}
+	]
+}
+
+socket.on("watcher", id => {
+	const peerConnection = new RTCPeerConnection(config);
+	peerConnections[id] = peerConnection;
+
+	feed.getTracks().forEach(track => peerConnection.addTrack(track, feed))
+
+	peerConnection.onicecandidate = event => {
+		if (event.candidate) {
+			socket.emit("candidate", id, event.candidate);
+		}
+	};
+
+	peerConnection.createOffer()
+	.then(sdp => peerConnection.setLocalDescription(sdp))
+	.then(() => {
+		socket.emit("offer", id, peerConnection.localDescription);
+	});
+});
+
+socket.on("answer", (id, description) => {
+	peerConnections[id].setRemoteDescription(description);
+});
+
+socket.on("candidate", (id, candidate) => {
+	peerConnections[id].addIceCandidate(new RTCIceCandidate(candidate));
+	subscriber
+	.addIceCandidate(new RTCIceCandidate(candidate))
+	.catch(e => console.error(e))
+})
+
+socket.on("disconnectPeer", id => {
+	peerConnections[id].close();
+	delete peerConnections[id];
+	subscriber.close()
+})
+
+socket.on("offer", (id, description) => {
+	subscriber = new RTCPeerConnection(config);
+	subscriber
+	.setRemoteDescription(description)
+	.then(() => subscriber.createAnswer())
+	.then(sdp => subscriber.setLocalDescription(sdp))
+	.then(() => {
+		socket.emit("answer", id, subscriber.localDescription);
+	});
+	subscriber.ontrack = event => {
+		stream = event.streams[0];
+	};
+	subscriber.onicecandidate = event => {
+		if (event.candidate) {
+			socket.emit("candidate", id, event.candidate);
+		}
+	};
+});
+
+socket.on("connect", () => {
+	socket.emit("watcher");
+});
+
+socket.on("broadcaster", () => {
+	socket.emit("watcher");
+})
+
+const PeerFeed = ({/*feed*/ sender, dimensions}) => {
 	const peerRef = useRef();
 
 	useEffect(() => {
 		try {
-		console.log("Peer feed: "+ feed)
-		peerRef.current.src = feed.src; } catch (err) {console.log(err)}
-	}, [feed]);
+		peerRef.current.srcObject = stream; } catch (err) {console.log(err)}
+	}, [dimensions]);
 
 	return (
 		<div className="feed" style=
@@ -27,17 +103,17 @@ const PeerFeed = ({feed, dimensions}) => {
 			<video className="remote-feed" playsInline
 			ref={peerRef} autoPlay
 			width={dimensions[0]} height={dimensions[1]}/>
-			<h5 className="feedtitle" >{feed.sender?feed.sender:null}</h5>
+			<h5 className="feedtitle" >{sender?sender:null}</h5>
 		</div>
 	);
 }
 
-function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, user}) {
+function Call({ /*dispatch, enter, */room: { id, roomUsers, roomName}, location, /*feeds,*/user}) {
 	const [visible, setVisible] = useState((location.state?.type==="video")?true:false);
 	const [audible, setAudible] = useState(true);
 	const [dimensions, setDimensions] = useState([vw, vh]);
 	const [constraints, setConstraints] = useState({
-		video: !visible || {width: dimensions[0], height: dimensions[1]},
+		video: !visible || {facingMode:"user", width: dimensions[0], height: dimensions[1]},
 		audio: audible})
 	const [peers, setPeers] = useState(roomUsers.filter((caller) => caller !== user.name)||[])
 	const [remoteFeeds, setRemoteFeeds] = useState([])
@@ -47,13 +123,13 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	const getFeed = useCallback(async() => {
 			try {
 				feed = await navigator.mediaDevices.getUserMedia(constraints);
-				let	url = window.URL.createObjectURL(feed)
-				dispatch(url, user.name, location.state.room)
+				// dispatch(feed, user.name, location.state.room)
 				myFeed.current.srcObject = feed;
+				socket.emit("broadcaster");
 			} catch(err){
 				console.log(err);
 			}
-	}, [constraints, dispatch, location.state.room, user.name])
+	}, [constraints/*, dispatch, location.state.room, user.name*/])
 
 	useEffect(() => {
 		if(!mountedRef.current){
@@ -64,15 +140,15 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	useEffect(() => {
 		//new dimensions/change in audible/visible: set constraints
 		setConstraints({
-			video: visible && {width: dimensions[0], height: dimensions[1]},
+			video: visible && {facingMode: "user", width: dimensions[0], height: dimensions[1]},
 			audio: audible
 		});
 	}, [dimensions, audible, visible]);
 
 	useEffect(() => {
-		//new constraints: replace feed
-		getFeed();
-	}, [constraints, getFeed]);
+		//new constraints: change tracks
+		feed?.getTracks().forEach(track => track.applyConstraints(constraints))
+	}, [constraints]);
 
 	useEffect(() => {
 		//track peers
@@ -81,6 +157,7 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 				//new user: form peerlist, resize videos
 				setPeers(roomUsers.filter((caller) => caller !== user.name));
 				setDimensions([vw, (vh/roomUsers.length)]);
+				console.log("new caller recognized")
 			}
 			if(peers.length){
 				//peerlist contains some peer: set refs for peers
@@ -94,15 +171,18 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 		if(remoteFeeds && remoteFeeds[0]){
 			try{
 			peers.forEach((peer, i) => {
-				const latestFeed = feeds.find(feed => feed.sender === peer);
-				console.log('feed ref:'+ latestFeed)
-				remoteFeeds[i].current = latestFeed
+				remoteFeeds[i].current = peer
+				// const latestFeed = feeds.find(feed => feed.sender === peer);
+				// console.log('feed ref:'+ latestFeed)
+				// remoteFeeds[i].current = latestFeed
 			})
 			} catch(err) {console.log(err);}
 		}
-	}, [feeds, peers, remoteFeeds]);
+	}, [/*feeds,*/ peers, remoteFeeds]);
 
 	useEffect(() => () => {
+		feed.getTracks().forEach(track => track.stop());
+		socket.close();
 		mountedRef.current = false;
 		return;
 	}, []);
@@ -128,14 +208,16 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	}
 
 	let RemoteFeeds;
-	if (peers.length && feeds.length && remoteFeeds[0] && remoteFeeds[0].current) {
+	// if (peers.length && feeds.length && remoteFeeds[0] && remoteFeeds[0].current) {
+	if (peers.length) {
 		RemoteFeeds = peers.map((peer, index) =>
 			// pass PeerFeed component a feed and dimensions
 			{ return (
-				<PeerFeed key={uuidv5((index+peer),uid.NAMESPACE)} feed={remoteFeeds[index].current} dimensions={dimensions}/>
+				<PeerFeed key={uuidv5((index+peer),uid.NAMESPACE)} {/*feed*/}sender={remoteFeeds[index].current} dimensions={dimensions}/>
 			); }
 		);
 	}
+	// }
 
 	return (
 		<div className="call">
@@ -160,13 +242,13 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 }
 
 Call.propTypes = {
-	dispatch: PropTypes.func.isRequired,
-	enter: PropTypes.func.isRequired,
-	feeds: PropTypes.arrayOf(PropTypes.shape({
-		src: PropTypes.any.isRequired,
-		sender: PropTypes.string.isRequired,
-		roomid: PropTypes.string.isRequired
-	})).isRequired,
+	// dispatch: PropTypes.func.isRequired,
+	// enter: PropTypes.func.isRequired,
+	// feeds: PropTypes.arrayOf(PropTypes.shape({
+	// 	src: PropTypes.any.isRequired,
+	// 	sender: PropTypes.string.isRequired,
+	// 	roomid: PropTypes.string.isRequired
+	// })).isRequired,
 	room: PropTypes.shape({
 		id: PropTypes.string.isRequired,
 		roomUsers: PropTypes.arrayOf(PropTypes.string).isRequired ,
@@ -183,18 +265,18 @@ const mapStateToProps = (state, ownProps) => {
 		room: state.rooms.find(call => call.id === ownProps.location.state.room) || {
 			id: '',
 			roomUsers: [],
-			roomName: '' },
-		feeds: state.feeds.filter(feed => ((feed.roomid === ownProps.location.state.room) && (feed.sender !== ownProps.user.name)))
+			roomName: '' }
+		//, feeds: state.feeds.filter(feed => ((feed.roomid === ownProps.location.state.room) && (feed.sender !== ownProps.user.name)))
 	});
 }
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-	dispatch: (stream, sender, roomid) => {
-		dispatch(addFeed(stream, sender, roomid))
-	},
-	enter: (uid, name) => {
-		dispatch(joinRoom(uid, name))
-	}
-})
+// const mapDispatchToProps = (dispatch, ownProps) => ({
+	// dispatch: (stream, sender, roomid) => {
+	// 	dispatch(addFeed(stream, sender, roomid))
+	// },
+	// enter: (uid, name) => {
+	// 	dispatch(joinRoom(uid, name))
+	// }
+// })
 
-export const CallContainer = connect(mapStateToProps, mapDispatchToProps)(Call)
+export const CallContainer = connect(mapStateToProps, /*mapDispatchToProps*/null)(Call)
