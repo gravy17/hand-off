@@ -43,7 +43,7 @@ const setupSocket = (dispatch, storedCredentials) => {
 			dispatch(incomingMsg(data.msg, data.sender, data.id, data.roomid))
 			break;
 		case types.ADD_FEED:
-			dispatch(peerFeed(data.src, data.sender, data.roomId))
+			dispatch(peerFeed(data.src, data.sender, data.roomid))
 			break;
 		case types.CREATE_ROOM:
 			dispatch(peerCreate(
