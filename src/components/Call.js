@@ -9,16 +9,16 @@ import * as uid from '../constants/Namespace';
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+window.URL = window.URL || window.webkitURL;
 let feed;
-let chunks = [];
 
 const PeerFeed = ({feed, dimensions}) => {
 	const peerRef = useRef();
 
 	useEffect(() => {
 		try {
-			var blob = new Blob(feed.src, {type: "video/webm"});
-		peerRef.current.src = window.URL.createObjectURL(blob); } catch (err) {console.log(err)}
+		console.log("Peer feed: "+ feed)
+		peerRef.current.src = feed.src; } catch (err) {console.log(err)}
 	}, [feed]);
 
 	return (
@@ -44,27 +44,16 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	const myFeed = useRef();
 	const mountedRef = useRef(true);
 
-	const handleDataAvailable = useCallback((event) => {
-		if (event.data.size > 0) {
-			chunks.push(event.data)
-		}
-		if (chunks.length > 15) {
-			dispatch(chunks, user.name, location.state.room);
-			chunks = []
-		}
-	}, [dispatch, user.name, location.state.room])
-
 	const getFeed = useCallback(async() => {
 			try {
 				feed = await navigator.mediaDevices.getUserMedia(constraints);
-				const mediaRecorder = new MediaRecorder(feed, {mimeType: "video/webm; codecs=vp9" });
-				mediaRecorder.ondataavailable = handleDataAvailable;
+				let	url = window.URL.createObjectURL(feed)
+				dispatch(url, user.name, location.state.room)
 				myFeed.current.srcObject = feed;
-				mediaRecorder.start();
 			} catch(err){
 				console.log(err);
 			}
-	}, [constraints, handleDataAvailable])
+	}, [constraints, dispatch, location.state.room, user.name])
 
 	useEffect(() => {
 		if(!mountedRef.current){
@@ -106,6 +95,7 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 			try{
 			peers.forEach((peer, i) => {
 				const latestFeed = feeds.find(feed => feed.sender === peer);
+				console.log('feed ref:'+ latestFeed)
 				remoteFeeds[i].current = latestFeed
 			})
 			} catch(err) {console.log(err);}
@@ -173,7 +163,7 @@ Call.propTypes = {
 	dispatch: PropTypes.func.isRequired,
 	enter: PropTypes.func.isRequired,
 	feeds: PropTypes.arrayOf(PropTypes.shape({
-		src: PropTypes.arrayOf(PropTypes.instanceOf(Blob)),
+		src: PropTypes.any.isRequired,
 		sender: PropTypes.string.isRequired,
 		roomid: PropTypes.string.isRequired
 	})).isRequired,
