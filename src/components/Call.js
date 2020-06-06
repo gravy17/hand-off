@@ -147,7 +147,8 @@ function Call({ /*dispatch, enter, */room: { id, roomUsers, roomName}, location,
 
 	useEffect(() => {
 		//new constraints: change tracks
-		feed?.getTracks().forEach(track => track.applyConstraints(constraints))
+                if(feed){
+		feed.getTracks().forEach(track => track.applyConstraints(constraints))}
 	}, [constraints]);
 
 	useEffect(() => {
