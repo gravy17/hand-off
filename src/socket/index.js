@@ -32,6 +32,7 @@ const setupSocket = (dispatch, storedCredentials) => {
 			dispatch(incomingMsg(data.msg, data.sender, data.id, data.roomid))
 			break;
 		case types.ADD_FEED:
+                        console.log(JSON.stringify(data))
 			dispatch(peerFeed(data.src,
 			data.sender,
 			data.roomId))
