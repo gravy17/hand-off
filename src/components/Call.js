@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -10,22 +10,24 @@ import * as uid from '../constants/Namespace';
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 let feed;
+let chunks = [];
 
-const PeerFeed = (props) => {
+const PeerFeed = ({feed, dimensions}) => {
 	const peerRef = useRef();
 
 	useEffect(() => {
-		console.log("Peer feed: "+ props.feed)
-		peerRef.current.srcObject = props.feed.src;
-	}, [props.feed]);
+		try {
+			var blob = new Blob(feed.src, {type: "video/webm"});
+		peerRef.current.src = window.URL.createObjectURL(blob); } catch (err) {console.log(err)}
+	}, [feed]);
 
 	return (
 		<div className="feed" style=
-		{{width: props.dimensions[0], height: props.dimensions[1]}}>
+		{{width: dimensions[0], height: dimensions[1]}}>
 			<video className="remote-feed" playsInline
 			ref={peerRef} autoPlay
-			width={props.dimensions[0]} height={props.dimensions[1]}/>
-			<h5 className="feedtitle" >{props.feed.sender?props.feed.sender:null}</h5>
+			width={dimensions[0]} height={dimensions[1]}/>
+			<h5 className="feedtitle" >{feed.sender?feed.sender:null}</h5>
 		</div>
 	);
 }
@@ -42,21 +44,32 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	const myFeed = useRef();
 	const mountedRef = useRef(true);
 
-	async function getFeed() {
-		try {
-			feed = await navigator.mediaDevices.getUserMedia(constraints);
-			dispatch(feed, user.name, location.state.room)
-			myFeed.current.srcObject = feed;
-		} catch(err){
-			console.log(err);
+	const handleDataAvailable = useCallback((event) => {
+		if (event.data.size > 0) {
+			chunks.push(event.data)
 		}
-	}
+		if (chunks.length > 15) {
+			dispatch(chunks, user.name, location.state.room);
+			chunks = []
+		}
+	}, [dispatch, user.name, location.state.room])
+
+	const getFeed = useCallback(async() => {
+			try {
+				feed = await navigator.mediaDevices.getUserMedia(constraints);
+				const mediaRecorder = new MediaRecorder(feed, {mimeType: "video/webm; codecs=vp9" });
+				mediaRecorder.ondataavailable = handleDataAvailable;
+				myFeed.current.srcObject = feed;
+				mediaRecorder.start();
+			} catch(err){
+				console.log(err);
+			}
+	}, [constraints, handleDataAvailable])
 
 	useEffect(() => {
 		if(!mountedRef.current){
 			return
 		}
-		getFeed();
 	}, [])
 
 	useEffect(() => {
@@ -70,12 +83,11 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	useEffect(() => {
 		//new constraints: replace feed
 		getFeed();
-	}, [constraints]);
+	}, [constraints, getFeed]);
 
 	useEffect(() => {
 		//track peers
-		console.log(peers)
-		console.log(roomUsers)
+		try{
 			if((roomUsers.length-1) > peers.length){
 				//new user: form peerlist, resize videos
 				setPeers(roomUsers.filter((caller) => caller !== user.name));
@@ -83,19 +95,22 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 			}
 			if(peers.length){
 				//peerlist contains some peer: set refs for peers
-				setRemoteFeeds( Array(peers.length).fill().map((_, i) => remoteFeeds[i] || React.createRef()) );
+				setRemoteFeeds(Array(peers.length).fill().map((_, i) => remoteFeeds[i] || React.createRef()) );
 			}
-	}, [roomUsers, peers]);
+		} catch (err) {console.log(err)}
+	}, [roomUsers, peers, remoteFeeds, user.name]);
 
 	useEffect(()=> {
 		//track feeds
-		peers.forEach((peer, i) => {
-			console.log(peer);
-			let latestFeed = feeds.find(feed => feed.sender === peer);
-			console.log('feed ref:'+ latestFeed)
-			remoteFeeds[i].current = latestFeed
-		})
-	}, [feeds]);
+		if(remoteFeeds && remoteFeeds[0]){
+			try{
+			peers.forEach((peer, i) => {
+				const latestFeed = feeds.find(feed => feed.sender === peer);
+				remoteFeeds[i].current = latestFeed
+			})
+			} catch(err) {console.log(err);}
+		}
+	}, [feeds, peers, remoteFeeds]);
 
 	useEffect(() => () => {
 		mountedRef.current = false;
@@ -123,7 +138,7 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 	}
 
 	let RemoteFeeds;
-	if (peers.length && feeds.length) {
+	if (peers.length && feeds.length && remoteFeeds[0] && remoteFeeds[0].current) {
 		RemoteFeeds = peers.map((peer, index) =>
 			// pass PeerFeed component a feed and dimensions
 			{ return (
@@ -158,7 +173,7 @@ Call.propTypes = {
 	dispatch: PropTypes.func.isRequired,
 	enter: PropTypes.func.isRequired,
 	feeds: PropTypes.arrayOf(PropTypes.shape({
-		src: PropTypes.object.isRequired,
+		src: PropTypes.arrayOf(PropTypes.instanceOf(Blob)),
 		sender: PropTypes.string.isRequired,
 		roomid: PropTypes.string.isRequired
 	})).isRequired,

@@ -27,7 +27,7 @@ class Contacts extends Component {
 		var t = new Date().toLocaleString();
 		var str = this.state.self.concat(t);
 		var newId = uuidv5(str, uid.NAMESPACE);
-		prompt("Edit or Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n", newId);
+		newId = prompt("Edit or Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n", newId);
 		this.props.create(("Room-").concat(this.state.self),newId, this.state.self);
 	  setTimeout(this.props.history.push(
 			{ pathname: '/call/'+newId,
@@ -38,7 +38,7 @@ class Contacts extends Component {
 			}
 		), 2000);
 	}
- 
+
 	joinCall (type) {
 		let id = this.state.roominput;
 		this.props.join(id, this.state.self);
