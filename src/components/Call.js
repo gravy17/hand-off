@@ -162,7 +162,7 @@ Call.propTypes = {
 	dispatch: PropTypes.func.isRequired,
 	enter: PropTypes.func.isRequired,
 	feeds: PropTypes.arrayOf(PropTypes.shape({
-		src: PropTypes.string.isRequired,
+		src: PropTypes.object.isRequired,
 		sender: PropTypes.string.isRequired,
 		roomid: PropTypes.string.isRequired
 	})).isRequired,
