@@ -27,28 +27,28 @@ class Contacts extends Component {
 		var t = new Date().toLocaleString();
 		var str = this.state.self.concat(t);
 		var newId = uuidv5(str, uid.NAMESPACE);
-		alert("Edit, Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n" + newId);
+		prompt("Edit or Copy and Share this id to others so they can enter the call(You can also find it in the url after '/call/'): \n", newId);
 		this.props.create(("Room-").concat(this.state.self),newId, this.state.self);
-	  this.props.history.push(
+	  setTimeout(this.props.history.push(
 			{ pathname: '/call/'+newId,
 				state: {
 					room: newId,
 					type: type
 				}
 			}
-		);
+		), 2000);
 	}
-
+ 
 	joinCall (type) {
 		let id = this.state.roominput;
 		this.props.join(id, this.state.self);
-	  this.props.history.push({
+	  setTimeout(this.props.history.push({
 			pathname: '/call/'+id,
 			state: {
 				room: id,
 				type: type
 			}
-		});
+		}), 10000);
 	}
 
   render() {

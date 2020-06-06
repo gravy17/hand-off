@@ -1,10 +1,10 @@
 import * as types from '../constants/ActionTypes';
 
 const feeds = (state = [], action) => {
-		console.log(action);
 		switch (action.type) {
 			case types.PEER_FEED:
 			case types.ADD_FEED:
+				console.log(JSON.stringify(action))
 				return state.concat([{
 					src: action.src,
 					sender: action.sender,

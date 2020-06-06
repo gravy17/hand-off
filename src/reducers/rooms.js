@@ -15,13 +15,13 @@ const rooms = (state = [{id: DEFAULT_ROOM, roomUsers: [], roomName:'General Chat
 				let room;
 				if(index >= 0){
 				room = JSON.parse(JSON.stringify(state[index]));}
-				if (!room){
-					return state.concat([{
-					id: action.id,
-					roomUsers: [action.newUser],
-					roomName: action.newUser.concat("'s Room") }])
-				}
-				if (!room.roomUsers.includes(action.newUser)){
+				// if (!room){
+				// 	return state.concat([{
+				// 	id: action.id,
+				// 	roomUsers: [action.newUser],
+				// 	roomName: action.newUser.concat("'s Room") }])
+				// }
+				if (room && !room.roomUsers.includes(action.newUser)){
 				room.roomUsers.push(action.newUser);
 				const newState = JSON.parse(JSON.stringify(state))
 				newState.splice(index, 1, room);
