@@ -15,7 +15,7 @@ const PeerFeed = (props) => {
 	const peerRef = useRef();
 
 	useEffect(() => {
-		console.log(props.feed)
+		console.log("Peer feed: "+ props.feed)
 		peerRef.current.srcObject = props.feed.src;
 	}, [props.feed]);
 
@@ -74,7 +74,8 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 
 	useEffect(() => {
 		//track peers
-		if(roomUsers){
+		console.log(peers)
+		console.log(roomUsers)
 			if((roomUsers.length-1) > peers.length){
 				//new user: form peerlist, resize videos
 				setPeers(roomUsers.filter((caller) => caller !== user.name));
@@ -84,18 +85,13 @@ function Call({ dispatch, room: { id, roomUsers, roomName}, location, feeds, use
 				//peerlist contains some peer: set refs for peers
 				setRemoteFeeds( Array(peers.length).fill().map((_, i) => remoteFeeds[i] || React.createRef()) );
 			}
-		}
 	}, [roomUsers, peers]);
 
 	useEffect(()=> {
 		//track feeds
-		console.log(feeds)
 		peers.forEach((peer, i) => {
 			console.log(peer);
-
-			let peerFeeds = feeds.filter(feed => feed.sender === peer);
-
-			let latestFeed = peerFeeds[peerFeeds.length-1];
+			let latestFeed = feeds.find(feed => feed.sender === peer);
 			console.log('feed ref:'+ latestFeed)
 			remoteFeeds[i].current = latestFeed
 		})
