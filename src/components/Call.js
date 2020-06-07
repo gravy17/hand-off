@@ -35,9 +35,9 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			if(!mountedRef?.current)
 			{stream.getTracks().forEach(track => track.stop());
 			return}
-			setStream(stream);
 			if (myStream.current)
 			{myStream.current.srcObject = stream;}
+			setStream(stream);
 		})
 
 		socketRef.current.on("yourID", (data) => {
@@ -65,9 +65,9 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}, [dimensions, audible, visible]);
 
 	useEffect(() => {
-    if(myStream.current){
-		myStream.current.srcObject.getTracks().forEach(track => track.applyConstraints(constraints))}
-	}, [constraints, myStream.current]);
+    if(stream){
+		stream.getTracks().forEach(track => track.applyConstraints(constraints))}
+	}, [constraints]);
 
 	useEffect(() => () => {
 		if(socketRef.current)
@@ -85,7 +85,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			console.log(caller)
 			console.log(callerSignal)
 		}
-	}, [receivingCall, caller])
+	}, [receivingCall, caller, callerSignal])
 
 	useEffect(() => {
 		console.log(peers);
@@ -110,7 +110,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			stream: stream
 		});
 		console.log('call going out')
-
+		console.log(stream);
 		peer.on("signal", data => {
 			console.log('initiator: '+yourID)
 			console.log('to: '+id)
