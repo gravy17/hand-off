@@ -80,6 +80,10 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	useEffect(() => {
 		if (receivingCall && caller && callerSignal){
 			acceptCall();
+		}else {
+			console.log(receivingCall)
+			console.log(caller)
+			console.log(callerSignal)
 		}
 	}, [receivingCall, caller])
 
@@ -105,18 +109,23 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			},
 			stream: stream
 		});
+		console.log('call going out')
 
 		peer.on("signal", data => {
+			console.log('initiator: '+yourID)
+			console.log('to: '+id)
 			socketRef.current.emit("callUser", { userToCall: id, signalData: data, from: yourID })
 		})
 
 		peer.on("stream", feed => {
 			if (remoteFeed.current) {
+				console.log("should get a feed now")
 				remoteFeed.current.srcObject = feed;
 			}
 		});
 
 		socketRef.current.on("callAccepted", signal => {
+			console.log("Call accept fired")
 			setCallAccepted(true);
 			peer.signal(signal);
 		})
@@ -146,14 +155,14 @@ console.log(callerSignal)
 
 	function toggleMute() {
 		setAudible(current => !current);
-		if(myStream.current?.srcObject){	myStream.current.srcObject.getAudioTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
+		if(stream){	stream.getAudioTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
 		}
 	}
 
 	function toggleVideo() {
 		setVisible(current => !current);
-		if(myStream.current?.srcObject){
-			myStream.current.srcObject.getVideoTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
+		if(stream){
+			stream.getVideoTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
 		}
 	}
 
