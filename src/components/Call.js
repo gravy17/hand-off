@@ -15,7 +15,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	const [audible, setAudible] = useState(true);
 	const [dimensions, setDimensions] = useState([vw, vh]);
 	const [constraints, setConstraints] = useState({
-		video: !visible || {facingMode:"user", width: dimensions[0], height: dimensions[1]},
+		video: visible && {facingMode:"user"},
 		audio: audible})
 	const [peers, setPeers] = useState({});
 	const [receivingCall, setReceivingCall] = useState(false)
@@ -46,7 +46,6 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 
 		socketRef.current.on("allUsers", users => {
 			setPeers(users);
-			console.log(JSON.stringify(users));
 		})
 
 		socketRef.current.on("hey", data => {
@@ -59,15 +58,15 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 
 	useEffect(() => {
 		setConstraints({
-			video: visible && {facingMode: "user", width: dimensions[0], height: dimensions[1]},
+			video: visible && {facingMode: "user"},
 			audio: audible
 		});
-	}, [dimensions, audible, visible]);
+	}, [audible, visible]);
 
 	useEffect(() => {
-    if(stream){
-		stream.getTracks().forEach(track => track.applyConstraints(constraints))}
-	}, [constraints]);
+    if(myStream.current?.srcObject){
+		myStream.current.srcObject.getTracks().forEach(track => track.applyConstraints(constraints))}
+	}, [constraints, myStream]);
 
 	useEffect(() => () => {
 		if(socketRef.current)
@@ -80,17 +79,8 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	useEffect(() => {
 		if (receivingCall && caller && callerSignal){
 			acceptCall();
-		}else {
-			console.log(receivingCall)
-			console.log(caller)
-			console.log(callerSignal)
 		}
 	}, [receivingCall, caller, callerSignal])
-
-	useEffect(() => {
-		console.log(peers);
-		console.log("your id"+ yourID)
-	}, [peers])
 
 	useEffect(() => {
 		setDimensions([vw, vh/2]);
@@ -109,47 +99,36 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			},
 			stream: stream
 		});
-		console.log('call going out')
-		console.log(stream);
+
 		peer.on("signal", data => {
-			console.log('initiator: '+yourID)
-			console.log('to: '+id)
 			socketRef.current.emit("callUser", { userToCall: id, signalData: data, from: yourID })
 		})
 
 		peer.on("stream", feed => {
 			if (remoteFeed.current) {
-				console.log("should get a feed now")
 				remoteFeed.current.srcObject = feed;
 			}
 		});
 
 		socketRef.current.on("callAccepted", signal => {
-			console.log("Call accept fired")
 			setCallAccepted(true);
 			peer.signal(signal);
 		})
 	}
 
 	function acceptCall(){
-console.log('call coming in');
 		setCallAccepted(true);
-		setDimensions([vw, vh/2]);
 		const peer = new Peer({
 			initiator: false,
 			trickle: false,
 			stream: stream,
 		});
 		peer.on("signal", data => {
-console.log('caller ' +caller)
-console.log('signal ' +data)
 			socketRef.current.emit("acceptCall", {signal: data, to: caller})
 		});
 		peer.on("stream", feed => {
-console.log('feed ' +feed)
 			remoteFeed.current.srcObject = feed;
 		});
-console.log(callerSignal)
 		peer.signal(callerSignal)
 	}
 
@@ -198,7 +177,7 @@ console.log(callerSignal)
 			<div className="row callbtns">
 			{Object.keys(peers).map( (key,i) => {
 				if (peers[key] !== yourID) {
-					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>peer {i}</button>);
+					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>{i}</button>);
 				}
 			})}
 
