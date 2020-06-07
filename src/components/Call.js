@@ -2,35 +2,13 @@ import React, { useEffect, useState, useRef} from 'react';
 import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { v5 as uuidv5 } from 'uuid';
 import Peer from "simple-peer";
-
-import * as uid from '../constants/Namespace';
 import io from "socket.io-client";
+
+
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 const ENDPOINT = 'https://hand-off-server.herokuapp.com/';
-
-const PeerFeed = ({peer, sender, dimensions}) => {
-	const peerRef = useRef();
-
-	useEffect(() => {
-		try {
-		peer.on("stream", pstream => {
-			peerRef.current.srcObject = pstream;
-		}) } catch (err) {console.log(err)}
-	});
-
-	return (
-		<div className="feed" style=
-		{{width: dimensions[0], height: dimensions[1]}}>
-			<video className="remote-feed" playsInline
-			ref={peerRef} autoPlay
-			width={dimensions[0]} height={dimensions[1]}/>
-			<h5 className="feedtitle" >{sender?sender:null}</h5>
-		</div>
-	);
-}
 
 const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	const [visible, setVisible] = useState((location.state?.type==="video")?true:false);
@@ -39,82 +17,45 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	const [constraints, setConstraints] = useState({
 		video: !visible || {facingMode:"user", width: dimensions[0], height: dimensions[1]},
 		audio: audible})
-	const [peers, setPeers] = useState([])
-	const peersRef = useRef([])
+	const [peers, setPeers] = useState({});
+	const [receivingCall, setReceivingCall] = useState(false)
+	const [caller, setCaller] = useState("");
+	const [callerSignal, setCallerSignal] = useState();
+	const [callAccepted, setCallAccepted]= useState(false);
+	const [stream, setStream] = useState();
+	const [yourID, setYourID] = useState("");
+	const remoteFeed = useRef();
 	const myStream = useRef();
 	const mountedRef = useRef(true);
 	const socketRef = useRef();
 
 	useEffect(() => {
-		if(!mountedRef.current){
-			return
-		}
 		socketRef.current = io.connect(ENDPOINT);
 		navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-			myStream.current.srcObject = stream;
-
-			socketRef.current.emit("join room", id);
-
-			socketRef.current.on("all users", users => {
-				const peers = [];
-				users.forEach(userID => {
-					const peer = createPeer(userID, socketRef.current.id, stream);
-					peersRef.current.push({
-						peerID: userID,
-						peer,
-					})
-					peers.push(peer);
-				})
-				setPeers(peers);
-				setDimensions([vw, vh/peers.length]);
-			})
-
-			socketRef.current.on("user joined", payload => {
-				const peer = addPeer(payload.signal, payload.callerID, stream);
-				peersRef.current.push({
-					peerID: payload.callerID,
-					peer,
-				})
-				setPeers(peers => [...peers, peer]);
-			});
-
-			socketRef.current.on("receiving returned signal", payload => {
-				const item = peersRef.current.find(peer => peer.peerID === payload.id);
-				item.peer.signal(payload.signal);
-			});
+			if(!mountedRef?.current)
+			{stream.stop();
+			return}
+			setStream(stream);
+			if (myStream.current)
+			{myStream.current.srcObject = stream;}
 		})
 
-	}, [constraints, id, peersRef])
-
-	function createPeer(neighbor, newPeer, feed) {
-		const peer = new Peer({
-			initiator: true,
-			trickle: false,
-			feed,
-		});
-
-		peer.on("signal", signal => {
-			socketRef.current.emit("sending signal", { neighbor, newPeer, signal })
+		socketRef.current.on("yourID", (id) => {
+			setYourID(id);
 		})
 
-		return peer;
-	}
-
-	function addPeer(neighborSignal, newPeer, feed) {
-		const peer = new Peer({
-			initiator: false,
-			trickle: false,
-			feed,
-		});
-
-		peer.on("signal", signal => {
-			socketRef.current.emit("returning signal", { signal, newPeer })
+		socketRef.current.on("allUsers", users => {
+			setPeers(users);
+			console.log(JSON.stringify(users));
 		})
 
-		peer.signal(neighborSignal);
+		socketRef.current.on("hey", data => {
+			setReceivingCall(true);
+			setCaller(data.from);
+			setCallerSignal(data.signal);
+		})
 
-		return peer;
-	}
+	}, []);
 
 	useEffect(() => {
 		setConstraints({
@@ -124,16 +65,77 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}, [dimensions, audible, visible]);
 
 	useEffect(() => {
-    if(myStream.current?.srcObject){
-		myStream.current.srcObject.getTracks().forEach(track => track.applyConstraints(constraints))}
-	}, [constraints]);
+    if(stream){
+		stream.getTracks().forEach(track => track.applyConstraints(constraints))}
+	}, [constraints, stream]);
 
 	useEffect(() => () => {
-		myStream.current.srcObject.getTracks().forEach(track => track.stop());
-		socketRef.current.close();
-		mountedRef.current = false;
+		if(stream)
+		{stream.getTracks().forEach(track => track.stop());}
+		if(socketRef.current)
+		{socketRef.current.close();}
+		if(mountedRef.current)
+		{mountedRef.current = false;}
 		return;
 	}, []);
+
+	useEffect(() => {
+		if (receivingCall && caller){
+			acceptCall();
+		}
+	}, [receivingCall, caller])
+
+	useEffect(() => {
+		console.log(peers);
+		console.log("your id"+ yourID)
+	}, [peers])
+
+	function callPeer(id) {
+		const peer = new Peer({
+			initiator: true,
+			trickle: false,
+			config: {
+				iceServers: [
+					{
+						urls: ["stun:Stun.l.google.com:19302"]
+					}
+				]
+			},
+			stream: stream
+		});
+
+		peer.on("signal", data => {
+			socketRef.current.emit("callUser", { userToCall: id, signalData: data, from: yourID })
+		})
+
+		peer.on("stream", feed => {
+			if (remoteFeed.current) {
+				remoteFeed.current.srcObject = feed;
+			}
+		});
+
+		socketRef.current.on("callAccepted", signal => {
+			setCallAccepted(true);
+			peer.signal(signal);
+		})
+	}
+
+	function acceptCall(){
+		setCallAccepted(true);
+		setDimensions([vw, vh/2]);
+		const peer = new Peer({
+			initiator: false,
+			trickle: false,
+			stream: stream,
+		});
+		peer.on("signal", data => {
+			socketRef.current.emit("acceptCall", {signal: data, to: caller})
+		});
+		peer.on("stream", feed => {
+			remoteFeed.current.srcObject = feed;
+		});
+		peer.signal(callerSignal)
+	}
 
 	function toggleMute() {
 		setAudible(current => !current);
@@ -149,19 +151,22 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}
 
 	let MyFeed;
-	// if (stream) {
+	if (stream) {
 		MyFeed = (
 			<video className="my-feed" playsInline muted ref={myStream} autoPlay width={dimensions[0]} height={dimensions[1]}/>
 		);
-	// }
+	}
 
-	let RemoteFeeds;
-	if (peers.length) {
-		RemoteFeeds = peers.map((peer, index) =>
-		{return (
-			<PeerFeed key={uuidv5((index+peer),uid.NAMESPACE)} peer={peer} sender={peersRef[index].current.peerID} dimensions={dimensions}/>	)
-		}
-		);
+	let RemoteFeed;
+	if (callAccepted) {
+		RemoteFeed =
+		<div className="feed" style=
+		{{width: dimensions[0], height: dimensions[1]}}>
+			<video className="remote-feed" playsInline
+			ref={remoteFeed} autoPlay
+			width={dimensions[0]} height={dimensions[1]}/>
+			<h5 className="feedtitle" >Peer</h5>
+		</div>
 	}
 
 	return (
@@ -172,10 +177,16 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 					{MyFeed}
 					<h5 className="feedtitle">{MyFeed?"Me":null}</h5>
 				</div>
-				{RemoteFeeds}
+				{RemoteFeed}
 			</div>
 			<Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
 			<div className="row callbtns">
+			{Object.keys(peers).map( (key,i) => {
+				if (peers[key] !== yourID) {
+					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>Peer {i}</button>);
+				}
+			})}
+
 			<button onClick={toggleMute} className={audible?"mutebtn":"mutebtn activeCallCtrl"}><i className="fas fa-volume-mute"></i></button>
 
 			<button onClick={toggleVideo} className={visible?"novideo-btn":"novideo-btn activeCallCtrl"}><i className="fas fa-video-slash"></i></button>
