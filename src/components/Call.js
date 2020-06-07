@@ -123,6 +123,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}
 
 	function acceptCall(){
+console.log('call coming in');
 		setCallAccepted(true);
 		setDimensions([vw, vh/2]);
 		const peer = new Peer({
@@ -131,11 +132,15 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			stream: stream,
 		});
 		peer.on("signal", data => {
+console.log('caller ' +caller)
+console.log('signal ' +data)
 			socketRef.current.emit("acceptCall", {signal: data, to: caller})
 		});
 		peer.on("stream", feed => {
+console.log('feed ' +feed)
 			remoteFeed.current.srcObject = feed;
 		});
+console.log(callerSignal)
 		peer.signal(callerSignal)
 	}
 
