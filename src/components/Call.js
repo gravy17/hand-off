@@ -33,15 +33,15 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		socketRef.current = io.connect(ENDPOINT);
 		navigator.mediaDevices.getUserMedia(constraints).then(stream => {
 			if(!mountedRef?.current)
-			{stream.stop();
+			{stream.getTracks().forEach(track => track.stop());
 			return}
 			setStream(stream);
 			if (myStream.current)
 			{myStream.current.srcObject = stream;}
 		})
 
-		socketRef.current.on("yourID", (id) => {
-			setYourID(id);
+		socketRef.current.on("yourID", (data) => {
+			setYourID(data.id);
 		})
 
 		socketRef.current.on("allUsers", users => {
@@ -65,13 +65,11 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}, [dimensions, audible, visible]);
 
 	useEffect(() => {
-    if(stream){
-		stream.getTracks().forEach(track => track.applyConstraints(constraints))}
-	}, [constraints, stream]);
+    if(myStream.current){
+		myStream.current.srcObject.getTracks().forEach(track => track.applyConstraints(constraints))}
+	}, [constraints, myStream.current]);
 
 	useEffect(() => () => {
-		if(stream)
-		{stream.getTracks().forEach(track => track.stop());}
 		if(socketRef.current)
 		{socketRef.current.close();}
 		if(mountedRef.current)
@@ -89,6 +87,10 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		console.log(peers);
 		console.log("your id"+ yourID)
 	}, [peers])
+
+	useEffect(() => {
+		setDimensions([vw, vh/2]);
+	}, [remoteFeed])
 
 	function callPeer(id) {
 		const peer = new Peer({
@@ -165,7 +167,6 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			<video className="remote-feed" playsInline
 			ref={remoteFeed} autoPlay
 			width={dimensions[0]} height={dimensions[1]}/>
-			<h5 className="feedtitle" >Peer</h5>
 		</div>
 	}
 
@@ -182,8 +183,8 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			<Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
 			<div className="row callbtns">
 			{Object.keys(peers).map( (key,i) => {
-				if (peers[key] !== yourID) {
-					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>Peer {i}</button>);
+				if (peers[key].id !== yourID && !roomUsers.includes(peers[key].name) ) {
+					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>peers[key].name</button>);
 				}
 			})}
 
