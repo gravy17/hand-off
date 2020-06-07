@@ -78,7 +78,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}, []);
 
 	useEffect(() => {
-		if (receivingCall && caller){
+		if (receivingCall && caller && callerSignal){
 			acceptCall();
 		}
 	}, [receivingCall, caller])
