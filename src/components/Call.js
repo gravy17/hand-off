@@ -41,7 +41,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		})
 
 		socketRef.current.on("yourID", (data) => {
-			setYourID(data.id);
+			setYourID(data);
 		})
 
 		socketRef.current.on("allUsers", users => {
@@ -183,8 +183,8 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			<Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
 			<div className="row callbtns">
 			{Object.keys(peers).map( (key,i) => {
-				if (peers[key].id !== yourID && !roomUsers.includes(peers[key].name) ) {
-					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>peers[key].name</button>);
+				if (peers[key] !== yourID) {
+					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>peer {i}</button>);
 				}
 			})}
 
