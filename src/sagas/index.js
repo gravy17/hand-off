@@ -1,11 +1,11 @@
-import { takeEvery } from 'redux-saga/effects'
+import { takeEvery, takeLatest } from 'redux-saga/effects'
 import * as types from '../constants/ActionTypes'
 
 const rootSaga = function* rootSaga(params) {
 	yield takeEvery(types.OUTGOING_MSG,(action) => {
 		params.socket.emit('peer-msg', action)
 	})
-	yield takeEvery(types.ADD_FEED, (action) => {
+	yield takeLatest(types.ADD_FEED, (action) => {
 		params.socket.emit('peer-msg', action)
 	})
 	yield takeEvery(types.REGISTER_USR, (action) => {

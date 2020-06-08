@@ -2,8 +2,10 @@ import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import {outgoingMsg, createRoom, joinRoom} from '../actions';
+import {outgoingMsg, joinRoom} from '../actions';
 import {UserList} from './UserList';
+
+const user = JSON.parse(localStorage.getItem("handoff-user"));
 
 class Chat extends Component {
 	constructor(props) {
@@ -13,12 +15,26 @@ class Chat extends Component {
 		this.handleChange = this.handleChange.bind(this);
 		this.userlistToggle = this.userlistToggle.bind(this);
 		this.scrollToBottom = this.scrollToBottom.bind(this);
-		// console.log(JSON.stringify(props));
+		props.enter(props.location.state?.room, user.name);
 	}
 	componentDidMount () {
-		let curr = prompt("Confirm room id below:\n ", this.props.location.state.room );
+		if (!this.props.location.state?.room) {
+			let id = this.props.location.pathname.split(/chat\//, 2)[1]
+			this.props.enter(id, user.name);
+			this.forceUpdate();
+			setTimeout(this.props.history.push(
+				{ pathname: '/chat/'+id,
+					state: {
+						room: id,
+						type: 'chat'
+					}
+				}
+			), 1000);
+		}
+
+		let curr = prompt("Confirm or change room id below:\n ", this.props.location.state.room );
 		if(curr && this.props.location.state.room !== curr){
-			this.props.enter(curr, this.props.user.name);
+			this.props.enter(curr, user.name);
 			this.forceUpdate();
 			setTimeout(this.props.history.push(
 				{ pathname: '/chat/'+curr,
@@ -28,12 +44,8 @@ class Chat extends Component {
 					}
 				}
 			), 1000);
-		} else {
-			if (!this.props.room){
-				this.props.create("Room-".concat(this.props.user.name), this.props.location.state.room, this.props.user.name); this.forceUpdate(); return;}
-			if (!this.props.room.roomUsers.length || !this.props.room.roomUsers.includes(this.props.user.name)){
-				this.props.enter(this.props.location.state.room, this.props.user.name);this.forceUpdate();}
 		}
+
 		if(!this.state.viewusers)
 		{this.scrollToBottom();}
 	}
@@ -46,10 +58,10 @@ class Chat extends Component {
 	}
 	submitMessage () {
 		if (this.state.input){
-		var datetime = new Date().toLocaleString();
-		this.props.dispatch(this.state.input, this.state.self, datetime, this.props.room.id);
-		this.setState({input: ''});
-	}
+			var datetime = new Date().toLocaleString();
+			this.props.dispatch(this.state.input, this.state.self, datetime, this.props.room.id);
+			this.setState({input: ''});
+		}
 	}
 	handleChange (event) {
 		this.setState({input: event.target.value});
@@ -93,6 +105,7 @@ const Message = (prop) => {
 
 Chat.propTypes = {
 	dispatch: PropTypes.func.isRequired,
+	enter: PropTypes.func.isRequired,
 	messages: PropTypes.arrayOf(PropTypes.shape({
 		id: PropTypes.string.isRequired,
 		msg: PropTypes.string.isRequired,
@@ -120,9 +133,6 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => ({
 	dispatch: (msg, sender, datetime, roomid) => {
 		dispatch(outgoingMsg(msg, sender, datetime, roomid))
-	},
-	create: (roomName, roomid, name) => {
-		dispatch(createRoom(roomName, roomid, name))
 	},
 	enter: (uid, name) => {
 		dispatch(joinRoom(uid, name))

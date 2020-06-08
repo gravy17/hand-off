@@ -75,7 +75,10 @@ class App extends Component {
             <Route exact path='/' render={(props) => <ContactsContainer {...props} user={this.props.user}/>} />
             <Route path='/chat' render={(props) => <ChatContainer {...props} user={this.props.user}/>} />
             <Route path='/file-share' render={(props) => <FileShare {...props} user={this.props.user}/>} />
-            <Route path='/call' render={(props) => <CallContainer {...props} user={this.props.user}/>} />
+            <Route path='/call' render={(props) => <CallContainer {...props} user={this.props.user} room= {{
+							id: '',
+							roomUsers: [],
+							roomName: '' }} />} />
 						<Route component={Error}/>
           </Switch>
         </main>

@@ -1,204 +1,200 @@
-import React, {Component} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import Peer from "simple-peer";
+import io from "socket.io-client";
 
-import {addFeed, createRoom, joinRoom} from '../actions';
-
-let media = {};
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-let dimensions = [vw, vh];
+const ENDPOINT = 'https://hand-off-server.herokuapp.com/';
 
-class Call extends Component {
-	constructor(props) {
-		super(props);
-		var n = 1;
-		if(props.room){
-		n = props.room.roomUsers.length;}
-		var visibility = false;
-		if(props.location.state.type==="video"){
-			visibility = true;
+const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
+	const [visible, setVisible] = useState((location.state?.type==="video")?true:false);
+	const [audible, setAudible] = useState(true);
+	const [dimensions, setDimensions] = useState([vw, vh]);
+	const [constraints, setConstraints] = useState({
+		video: visible?{facingMode: "user"}:'false',
+		audio: audible})
+	const [peers, setPeers] = useState({});
+	const [receivingCall, setReceivingCall] = useState(false)
+	const [caller, setCaller] = useState("");
+	const [callerSignal, setCallerSignal] = useState();
+	const [callAccepted, setCallAccepted]= useState(false);
+	const [stream, setStream] = useState();
+	const [yourID, setYourID] = useState("");
+	const remoteFeed = useRef();
+	const myStream = useRef();
+	const mountedRef = useRef(true);
+	const socketRef = useRef();
+
+	useEffect(() => {
+		socketRef.current = io.connect(ENDPOINT);
+
+		if (!mountedRef?.current){
+			console.log("call should have ended");setStream(null);
+			return;
 		}
-		const newGrid = this.calcGrid(vh, vw, n);
-		dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
 
-		this.state = {self: props.user.name, visible: visibility, audible: true, n: n, grid:newGrid, feedDimension: dimensions, stream: null};
-		this.toggleMute = this.toggleMute.bind(this);
-		this.toggleVideo = this.toggleVideo.bind(this);
-		if(visibility){
-			media = {audio: true,
-			video: {width: dimensions[0], height: dimensions[1]}
+		navigator.mediaDevices.getUserMedia(constraints).then(newstream => {
+			if (!mountedRef?.current){
+				newstream.getTracks().forEach(track => track.stop());
+				return;
 			}
-		} else {
-			media = {audio: true,
-			video: false}
-		}
-		// console.log(JSON.stringify(this.props));
-	}
 
-	componentDidMount() {
-		try {
-	 		navigator.mediaDevices.getUserMedia(media, this.handleVideo, this.videoError);
+			setStream(newstream);
 
-		}
-		catch (err) {
-			console.log("error: "+err);
-		}
-		if (!this.props.room){
-			let curr = prompt("Confirm room id below:\n ", this.props.location.state.room );
-			if(curr && this.props.location.state.room !== curr){
-				this.props.enter(curr, this.props.user.name);
-				this.forceUpdate();
-				setTimeout(this.props.history.push(
-					{ pathname: '/call/'+curr,
-						state: {
-							room: curr,
-							type: this.props.location.state.type
-						}
+			if (myStream.current) {
+				myStream.current.srcObject = newstream;
+			}
+		})
+
+		socketRef.current.on("yourID", (data) => {
+			setYourID(data);
+		})
+
+		socketRef.current.on("allUsers", users => {
+			setPeers(users);
+		})
+
+		socketRef.current.on("hey", data => {
+			setReceivingCall(true);
+			setCaller(data.from);
+			setCallerSignal(data.signal);
+		})
+
+	}, []) //eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		setConstraints({
+			video: visible?{facingMode: "user"}:'false',
+			audio: audible
+		});
+	}, [audible, visible]);
+
+	useEffect(() => () => {
+		if(socketRef.current)
+		{socketRef.current.close();}
+		if(mountedRef.current)
+		{mountedRef.current = false;}
+		return;
+	}, []);
+
+	function callPeer(id) {
+		const peer = new Peer({
+			initiator: true,
+			trickle: false,
+			config: {
+				iceServers: [
+					{
+						urls: ["stun:Stun.l.google.com:19302"]
 					}
-				), 1000);
+				]
+			},
+			stream: stream
+		});
+
+		peer.on("signal", data => {
+			socketRef.current.emit("callUser", { userToCall: id, signalData: data, from: yourID })
+		})
+
+		peer.on("stream", feed => {
+			if (remoteFeed.current) {
+				remoteFeed.current.srcObject = feed;
 			}
-		}else {
-			if (!this.props.room.roomUsers.length || !this.props.room.roomUsers.includes(this.props.user.name)){
-				this.props.enter(this.props.location.state.room, this.props.user.name);this.forceUpdate();
-			}
-		}
-	}
+		});
 
-	handleVideo(stream) {
-		console.log(stream);
-		const localVideo = document.getElementById("myFeed");
-		if(localVideo){
-		localVideo.srcObject = stream; this.props.dispatch(stream, this.state.self, this.props.room.roomid);
-	} else {console.log("Local Video container missing")}
-	}
-
-	videoError(err) {
-		console.log("error: "+err);
-	}
-
-	componentDidUpdate (){
-		let visibility = (typeof media.video !== 'object');
-		if(media.audio !== this.state.audible||visibility !== this.state.visible){
-			if(this.state.visible){
-				media = {audio: this.state.audible,
-				video: {width: this.state.feedDimension[0], height: this.state.feedDimension[1]}}
-			} else {
-				media = {audio: this.state.audible,
-				video: false};
-			}
-			try {
-		 		navigator.mediaDevices.getUserMedia(media, this.handleVideo, this.videoError);
-			}
-			catch (err) {
-				console.log("error: "+err);
-			}
-		}
-	}
-
-	calcGrid (vh, vw, n) {
-		if (n === 1){
-			return [1, 1];//w*h
-		}
-		//Deriving grid by highest common factor of n obtained via remainder method for a*b =c, where n is c and a and b are factors
-		var a = 2; var c = n;
-		while(a<c){
-			if (c%a === 0){
-				c/=a;
-			} else {
-				a++;
-			}
-		} var b = c/a;
-		if (b < a){
-			c = b;
-			b = a;
-			a = c;
-		}
-		if (vh > vw) {
-			return [a,b];
-		} else {
-			return [b,a];
-		}
-	}
-
- 	static getDerivedStateFromProps (props, state) {
-		if(props.room){
-			if(state.n !== props.room.roomUsers.length){
-				const newN = props.room.roomUsers.length;
-				const newGrid = this.calcGrid(vh, vw, newN);
-				dimensions = [(vw/newGrid[0]), (vh/newGrid[1])];
-				return ({...state, grid: newGrid, n: newN, feedDimension: dimensions});
-			}
-			else
-			{return state}
-		}
-	}
-
-	componentWillUnmount () {
-		if(this.state.stream){	this.state.stream.getTracks().forEach(track => track.stop());}
-
-		if(this.props.feeds.length){
-			this.props.feeds.forEach(feed => {
-				feed.src.getTracks().forEach(track => track.stop());
-			})
-		}
-	}
-
-	toggleMute () {
-		this.setState({
-			audible: !this.state.audible
+		socketRef.current.on("callAccepted", signal => {
+			setCallAccepted(true);
+			peer.signal(signal);
 		})
 	}
 
-	toggleVideo () {
-		this.setState({
-			visible : !this.state.visible
-		})
+	function acceptCall() {
+		setCallAccepted(true);
+		setReceivingCall(false);
+		const peer = new Peer({
+			initiator: false,
+			trickle: false,
+			stream: stream,
+		});
+		peer.on("signal", data => {
+			socketRef.current.emit("acceptCall", {signal: data, to: caller})
+		});
+		peer.on("stream", feed => {
+			remoteFeed.current.srcObject = feed;
+		});
+		peer.signal(callerSignal)
 	}
 
-  render() {
-		let videoFeeds;
-		if(this.props.feeds.length){
-			videoFeeds = this.props.feeds.map((feed) =>
-				{ return (
-					<Feed feed={feed} dimensions={this.state.feedDimension} key={feed.sender} self={this.state.self}/>
-				); }
-			);
+	useEffect(() => {
+		if (receivingCall && callerSignal && caller) {
+			acceptCall();
 		}
-    return (
-      <div className="page call">
-				<div className="feedLayer">
-				<div className="feed"><video id="myFeed" autoPlay width={this.state.feedDimension[0]} height={this.state.feedDimension[1]}>
-				</video><h5 className="feedtitle">"Me"</h5>
-				</div>
-				{videoFeeds}
-				</div>
-        <Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
-				<div className="row callbtns">
-				<button onClick={this.toggleMute} className={this.state.audible?"mutebtn":"mutebtn activeCallCtrl"}><i className="fas fa-volume-mute"></i></button>
+	}, [receivingCall, callerSignal, caller])//eslint-disable-line react-hooks/exhaustive-deps
 
-				<button onClick={this.toggleVideo} className={this.state.visible?"novideo-btn":"novideo-btn activeCallCtrl"}><i className="fas fa-video-slash"></i></button>
+	useEffect(() => {
+		if(callAccepted)
+		{setDimensions([vw, vh/2]);}
+	}, [callAccepted])
 
-				<Link to="/"><button className="endcall-btn"><i className="fas fa-phone-slash"></i></button></Link>
+	function toggleMute() {
+		myStream.current.srcObject.getAudioTracks().forEach(track => track.enabled = !audible)
+		setAudible(current => !current);
+	}
+
+	function toggleVideo() {
+		myStream.current.srcObject.getVideoTracks().forEach(track => track.enabled = !visible)
+		setVisible(current => !current);
+	}
+
+	let MyFeed;
+	if (stream) {
+		MyFeed = (
+			<video className="my-feed" playsInline muted ref={myStream} autoPlay width={dimensions[0]} height={dimensions[1]}/>
+		);
+	}
+
+	let RemoteFeed;
+	if (callAccepted) {
+		RemoteFeed =
+		<div className="feed" style=
+		{{width: dimensions[0], height: dimensions[1]}}>
+			<video className="remote-feed" playsInline
+			ref={remoteFeed} autoPlay
+			width={dimensions[0]} height={dimensions[1]}/>
+		</div>
+	}
+
+	return (
+		<div className="call">
+			<div className="feedLayer vertical-row">
+				<div className="feed" style=
+				{{width: dimensions[0], height: dimensions[1]}}>
+					{MyFeed}
+					<h5 className="feedtitle">{MyFeed?"Me":null}</h5>
 				</div>
-      </div>
-    );
-  }
-}
+				{RemoteFeed}
+			</div>
+			<Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
+			<div className="row callbtns">
+			{Object.keys(peers).map( (key,i) => {
+				return (peers[key] !== yourID)?
+				(<button className="peerlist" key={key} onClick={() => callPeer(key)}>{i}</button>)
+				:null
+			})}
 
-const Feed = (prop) => {
-	return (<div className="feed"><video autoPlay src={prop.feed.src} width={prop.dimensions[0]} height={prop.dimensions[1]}>
-	</video><h5 className="feedtitle">{prop.feed.sender}</h5></div>)
+			<button onClick={toggleMute} className={audible?"mutebtn":"mutebtn activeCallCtrl"}><i className="fas fa-volume-mute"></i></button>
+
+			<button onClick={toggleVideo} className={visible?"novideo-btn":"novideo-btn activeCallCtrl"}><i className="fas fa-video-slash"></i></button>
+
+			<Link to="/"><button className="endcall-btn"><i className="fas fa-phone-slash"></i></button></Link>
+			</div>
+		</div>
+	);
 }
 
 Call.propTypes = {
-	dispatch: PropTypes.func.isRequired,
-	feeds: PropTypes.arrayOf(PropTypes.shape({
-		src: PropTypes.string.isRequired,
-		sender: PropTypes.string.isRequired,
-		roomid: PropTypes.string.isRequired
-	})).isRequired,
 	room: PropTypes.shape({
 		id: PropTypes.string.isRequired,
 		roomUsers: PropTypes.arrayOf(PropTypes.string).isRequired ,
@@ -206,28 +202,17 @@ Call.propTypes = {
 	}).isRequired,
 	user: PropTypes.shape({
 		id: PropTypes.string.isRequired,
-		name: PropTypes.string
+		name: PropTypes.string.isRequired
 	}).isRequired
 }
 
 const mapStateToProps = (state, ownProps) => {
 	return({
-		room: state.rooms.find(call => call.id === ownProps.location.state.room),
-
-		feeds: state.feeds.filter(feed => feed.roomid === ownProps.location.state.room)
+		room: state.rooms.find(call => call.id === ownProps.location.state.room) || {
+			id: '',
+			roomUsers: [],
+			roomName: '' }
 	});
 }
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-	dispatch: (stream, sender, roomid) => {
-		dispatch(addFeed(stream, sender, roomid))
-	},
-	create: () => {
-		dispatch(createRoom("Room-".concat(ownProps.user.name), ownProps.location.state.room, ownProps.user.name))
-	},
-	enter: () => {
-		dispatch(joinRoom(ownProps.location.state.room, ownProps.user.name))
-	}
-})
-
-export const CallContainer = connect(mapStateToProps, mapDispatchToProps)(Call);
+export const CallContainer = connect(mapStateToProps, null)(Call)

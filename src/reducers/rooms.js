@@ -10,19 +10,23 @@ const rooms = (state = [{id: DEFAULT_ROOM, roomUsers: [], roomName:'General Chat
 					roomUsers: action.roomUsers,
 					roomName: action.roomName }]);
 			case types.PEER_JOIN:
-			case types.JOIN_ROOM: //find room by id
+			case types.JOIN_ROOM:
 				const index = state.findIndex(room => room.id === action.id);
-				const room = state[index];
-				if (!room){
-					return state.concat([{
-					id: action.id,
-					roomUsers: [action.newUser],
-					roomName: "Room-".concat(action.newUser) }])
-				}
-				if (!room.roomUsers.includes(action.newUser)){
-				room.roomUsers.push(action.newUser); //modify room
-				const newState = state.splice(index, 1, room); //create new state with modified room
-				return newState;} else {return state;}
+				let room;
+				if(index >= 0){
+				room = JSON.parse(JSON.stringify(state[index]));}
+				// if (!room){
+				// 	return state.concat([{
+				// 	id: action.id,
+				// 	roomUsers: [action.newUser],
+				// 	roomName: action.newUser.concat("'s Room") }])
+				// }
+				if (room && !room.roomUsers.includes(action.newUser)){
+				room.roomUsers.push(action.newUser);
+				const newState = JSON.parse(JSON.stringify(state))
+				newState.splice(index, 1, room);
+				return newState;
+				} else {return state;}
 			case types.RM_FROM_ROOMS:
 				let newstate = JSON.parse(JSON.stringify(state))
 				newstate.forEach(room => {

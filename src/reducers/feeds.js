@@ -4,11 +4,12 @@ const feeds = (state = [], action) => {
 		switch (action.type) {
 			case types.PEER_FEED:
 			case types.ADD_FEED:
-				return state.concat([{
+				let newState = [...state];
+				newState.unshift({
 					src: action.src,
 					sender: action.sender,
-					roomid: action.roomid }]);
-
+					roomid: action.roomid });
+				return newState
 			default:
 				return state;
 		}

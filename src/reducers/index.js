@@ -6,9 +6,9 @@ import feeds from "./feeds";
 
 const combinedReducer = combineReducers({
 	messages,
+	feeds,
 	users,
-	rooms,
-	feeds
+	rooms
 });
 
 export default combinedReducer;
