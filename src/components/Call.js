@@ -128,15 +128,15 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	}
 
 	useEffect(() => {
-		if (receivingCall) {
+		if (receivingCall && callerSignal && caller) {
 			acceptCall();
 		}
-	}, [receivingCall])//eslint-disable-line react-hooks/exhaustive-deps
+	}, [receivingCall, callerSignal, caller])//eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if(callAccepted)
 		{setDimensions([vw, vh/2]);}
-	}, [remoteFeed, callAccepted])
+	}, [callAccepted])
 
 	function toggleMute() {
 		myStream.current.srcObject.getAudioTracks().forEach(track => track.enabled = !audible)
