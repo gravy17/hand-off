@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {Link} from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Peer from "simple-peer";
 import io from "socket.io-client";
-
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
@@ -15,7 +14,7 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 	const [audible, setAudible] = useState(true);
 	const [dimensions, setDimensions] = useState([vw, vh]);
 	const [constraints, setConstraints] = useState({
-		video: visible && {facingMode:"user"},
+		video: visible?{facingMode: "user"}:'false',
 		audio: audible})
 	const [peers, setPeers] = useState({});
 	const [receivingCall, setReceivingCall] = useState(false)
@@ -31,13 +30,23 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 
 	useEffect(() => {
 		socketRef.current = io.connect(ENDPOINT);
-		navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-			if(!mountedRef?.current)
-			{stream.getTracks().forEach(track => track.stop());
-			return}
-			if (myStream.current)
-			{myStream.current.srcObject = stream;}
-			setStream(stream);
+
+		if (!mountedRef?.current){
+			console.log("call should have ended");setStream(null);
+			return;
+		}
+
+		navigator.mediaDevices.getUserMedia(constraints).then(newstream => {
+			if (!mountedRef?.current){
+				newstream.getTracks().forEach(track => track.stop());
+				return;
+			}
+
+			setStream(newstream);
+
+			if (myStream.current) {
+				myStream.current.srcObject = newstream;
+			}
 		})
 
 		socketRef.current.on("yourID", (data) => {
@@ -54,19 +63,14 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			setCallerSignal(data.signal);
 		})
 
-	}, []);
+	}, []) //eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		setConstraints({
-			video: visible && {facingMode: "user"},
+			video: visible?{facingMode: "user"}:'false',
 			audio: audible
 		});
 	}, [audible, visible]);
-
-	useEffect(() => {
-    if(myStream.current?.srcObject){
-		myStream.current.srcObject.getTracks().forEach(track => track.applyConstraints(constraints))}
-	}, [constraints, myStream]);
 
 	useEffect(() => () => {
 		if(socketRef.current)
@@ -75,16 +79,6 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		{mountedRef.current = false;}
 		return;
 	}, []);
-
-	useEffect(() => {
-		if (receivingCall && caller && callerSignal){
-			acceptCall();
-		}
-	}, [receivingCall, caller, callerSignal])
-
-	useEffect(() => {
-		setDimensions([vw, vh/2]);
-	}, [remoteFeed])
 
 	function callPeer(id) {
 		const peer = new Peer({
@@ -116,8 +110,9 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		})
 	}
 
-	function acceptCall(){
+	function acceptCall() {
 		setCallAccepted(true);
+		setReceivingCall(false);
 		const peer = new Peer({
 			initiator: false,
 			trickle: false,
@@ -132,17 +127,25 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 		peer.signal(callerSignal)
 	}
 
-	function toggleMute() {
-		setAudible(current => !current);
-		if(stream){	stream.getAudioTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
+	useEffect(() => {
+		if (receivingCall) {
+			acceptCall();
 		}
+	}, [receivingCall])//eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if(callAccepted)
+		{setDimensions([vw, vh/2]);}
+	}, [remoteFeed, callAccepted])
+
+	function toggleMute() {
+		myStream.current.srcObject.getAudioTracks().forEach(track => track.enabled = !audible)
+		setAudible(current => !current);
 	}
 
 	function toggleVideo() {
+		myStream.current.srcObject.getVideoTracks().forEach(track => track.enabled = !visible)
 		setVisible(current => !current);
-		if(stream){
-			stream.getVideoTracks().forEach(track => track.applyConstraints({ video: visible, audio: audible}));
-		}
 	}
 
 	let MyFeed;
@@ -176,9 +179,9 @@ const Call = ({ location, user, room, room: { id, roomUsers, roomName}} ) => {
 			<Link to="/"><button className="closebtn"><i className="fas fa-times"></i></button></Link>
 			<div className="row callbtns">
 			{Object.keys(peers).map( (key,i) => {
-				if (peers[key] !== yourID) {
-					return (<button className="peerlist" key={key} onClick={() => callPeer(key)}>{i}</button>);
-				}
+				return (peers[key] !== yourID)?
+				(<button className="peerlist" key={key} onClick={() => callPeer(key)}>{i}</button>)
+				:null
 			})}
 
 			<button onClick={toggleMute} className={audible?"mutebtn":"mutebtn activeCallCtrl"}><i className="fas fa-volume-mute"></i></button>
