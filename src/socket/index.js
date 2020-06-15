@@ -10,7 +10,7 @@ const setupSocket = (dispatch, storedCredentials) => {
 	var socket = io(ENDPOINT);
 	socket.emit('hello', {type: types.REGISTER_USR, id: storedCredentials.id, name: storedCredentials.name})
 	//attempt upgrade to webrtc p2p
-	var p2pSock = new P2P(socket, {autoUpgrade: true});
+	var p2pSock = new P2P(socket, {autoUpgrade: true, stream: true});
 
 	p2pSock.on('upgrade', function(){
 		alert("Now using WebRTC Peer Connection!")
