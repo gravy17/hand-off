@@ -1,3 +1,8 @@
+/*
+(c) by Thomas Konings
+Random Name Generator for Javascript
+*/
+
 function capFirst(string) {
 
     return string.charAt(0).toUpperCase() + string.slice(1);
