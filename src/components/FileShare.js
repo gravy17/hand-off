@@ -21,6 +21,7 @@ class FileShare extends Component {
 				prompt("Seeding...\nCopy and share the magnetURI below to peers through the chat: ", torrent.magnetURI)
 			})
 			this.setState({upfiles: event.target.files});
+			alert('Done!')
 		}
 	}
 
@@ -34,8 +35,8 @@ class FileShare extends Component {
 				alert("Downloading. Please wait...");
 				torrent.files.forEach((file) => {
 					file.appendTo('#file-container');
-					alert('download complete')
 				})
+				alert('download complete')
 			});
 	}
 
