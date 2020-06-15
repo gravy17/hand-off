@@ -14,7 +14,7 @@ class FileShare extends Component {
 		this.seedInput = React.createRef();
 	}
 
-	handleSeed(event) {
+	async handleSeed(event) {
 		if(event.target.files){
 			client.seed(event.target.files, (torrent) => {
 				this.setState({seedURI: torrent.magnetURI, seedHash: torrent.infoHash})
@@ -28,7 +28,7 @@ class FileShare extends Component {
 		this.seedInput.current.click();
 	}
 
-	handleDl() {
+	async handleDl() {
 			client.add(this.state.torrId, (torrent) => {
 
 				alert("Downloading. Please wait...");
