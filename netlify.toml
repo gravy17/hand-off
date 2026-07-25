@@ -1,0 +1,19 @@
+# Netlify build configuration.
+#
+# Netlify can only host the static client. The Socket.IO signaling server
+# (server/) must be deployed separately (any Node host); point the client at it
+# by setting the VITE_SERVER_URL environment variable in the Netlify UI.
+
+[build]
+  command = "npm run build"
+  publish = "client/dist"
+
+[build.environment]
+  # npm workspaces (the --workspace flag) require npm 7+, i.e. Node 15+.
+  NODE_VERSION = "20"
+
+# Single-page app: let React Router handle client-side routes.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
