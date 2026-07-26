@@ -64,6 +64,9 @@ Open http://localhost:5173, pick a display name and room, then open a second tab
 | `npm start` | Run the session BFF (serves `client/dist` if built) |
 | `npm run lint` | ESLint over the client |
 | `npm test` | Vitest unit tests |
+| `npm run vercel:dev` | Local Vercel runtime (`dist` + `/api/session`) |
+| `npm run deploy` | Vercel preview deploy |
+| `npm run deploy:prod` | Vercel production deploy |
 
 ## Environment
 
@@ -100,11 +103,12 @@ on `hand-off-server`.
      `{"roomId":"demo","username":"Ada"}` → JWT JSON
 6. Open two browser tabs on the deployed site and join the same room.
 
-CLI alternative:
+CLI alternative (from this repo):
 
 ```bash
-npx vercel          # preview
-npx vercel --prod   # production
+npm run vercel:dev    # local: static dist + serverless /api/session
+npm run deploy        # preview
+npm run deploy:prod   # production
 ```
 
 ## License
