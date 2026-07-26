@@ -2,6 +2,7 @@
   "name": "hand-off",
   "version": "2.0.0",
   "private": true,
+  "type": "module",
   "description": "HandOff — a peer-to-peer web app for real-time chat, audio/video calls, and file sharing.",
   "license": "MIT",
   "workspaces": [
