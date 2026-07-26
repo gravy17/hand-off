@@ -19,12 +19,16 @@
     "build": "npm --workspace @hand-off/client run build",
     "start": "npm --workspace @hand-off/server run start",
     "lint": "npm --workspace @hand-off/client run lint",
-    "test": "npm --workspace @hand-off/client run test"
+    "test": "npm --workspace @hand-off/client run test",
+    "vercel:dev": "vercel dev",
+    "deploy": "vercel",
+    "deploy:prod": "vercel --prod"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "vercel": "^46.0.0"
   }
 }

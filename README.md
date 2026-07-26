@@ -8,8 +8,6 @@ WebRTC. Signaling (presence + call/ICE) is handled by
 [`hand-off-server`](https://github.com/gravy17/hand-off-server); media, chat, and
 file bytes never touch the server.
 
-Live demo (legacy build): https://hand-off.netlify.app/
-
 ## Architecture
 
 This is an npm-workspaces monorepo that pairs with the external signaling server:
@@ -64,12 +62,15 @@ Open http://localhost:5173, pick a display name and room, then open a second tab
 | `npm start` | Run the session BFF (serves `client/dist` if built) |
 | `npm run lint` | ESLint over the client |
 | `npm test` | Vitest unit tests |
+| `npm run vercel:dev` | Local Vercel runtime (`dist` + `/api/session`) |
+| `npm run deploy` | Vercel preview deploy |
+| `npm run deploy:prod` | Vercel production deploy |
 
 ## Environment
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `ROOM_TOKEN_SECRET` | BFF / Vercel / Netlify + hand-off-server | Shared HS256 secret for room JWTs |
+| `ROOM_TOKEN_SECRET` | BFF / Vercel + hand-off-server | Shared HS256 secret for room JWTs |
 | `SIGNALING_URL` | BFF / serverless | Advertised signaling base URL in `/api/session` |
 | `VITE_SIGNALING_URL` | client build | Absolute Socket.IO URL (production) |
 | `VITE_API_URL` | client build | Absolute BFF URL when not same-origin |
@@ -100,11 +101,12 @@ on `hand-off-server`.
      `{"roomId":"demo","username":"Ada"}` → JWT JSON
 6. Open two browser tabs on the deployed site and join the same room.
 
-CLI alternative:
+CLI alternative (from this repo):
 
 ```bash
-npx vercel          # preview
-npx vercel --prod   # production
+npm run vercel:dev    # local: static dist + serverless /api/session
+npm run deploy        # preview
+npm run deploy:prod   # production
 ```
 
 ## License
