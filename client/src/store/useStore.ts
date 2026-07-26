@@ -9,6 +9,8 @@ interface StoreState {
   error: string | null;
 
   peers: Peer[];
+  /** userIds with an open (or accepted) WebRTC data link */
+  linkedPeers: Record<string, boolean>;
   messages: ChatMessage[];
   files: SharedFile[];
 
@@ -24,6 +26,7 @@ interface StoreState {
   setSession: (self: Peer, roomId: string) => void;
 
   setPeers: (peers: Peer[]) => void;
+  setPeerLinked: (id: string, linked: boolean) => void;
   addPeer: (peer: Peer) => void;
   removePeer: (id: string) => void;
   peerName: (id: string) => string;
@@ -51,6 +54,7 @@ export const useStore = create<StoreState>((set, get) => ({
   error: null,
 
   peers: [],
+  linkedPeers: {},
   messages: [],
   files: [],
 
@@ -66,6 +70,8 @@ export const useStore = create<StoreState>((set, get) => ({
   setSession: (self, roomId) => set({ self, roomId }),
 
   setPeers: (peers) => set({ peers }),
+  setPeerLinked: (id, linked) =>
+    set((s) => ({ linkedPeers: { ...s.linkedPeers, [id]: linked } })),
   addPeer: (peer) =>
     set((s) =>
       s.peers.some((p) => p.id === peer.id)
@@ -76,7 +82,9 @@ export const useStore = create<StoreState>((set, get) => ({
     set((s) => {
       const remoteStreams = { ...s.remoteStreams };
       delete remoteStreams[id];
-      return { peers: s.peers.filter((p) => p.id !== id), remoteStreams };
+      const linkedPeers = { ...s.linkedPeers };
+      delete linkedPeers[id];
+      return { peers: s.peers.filter((p) => p.id !== id), remoteStreams, linkedPeers };
     }),
   peerName: (id) => {
     if (id === get().self?.id || id === 'me') return get().self?.username ?? 'Me';
@@ -119,6 +127,7 @@ export const useStore = create<StoreState>((set, get) => ({
       connected: false,
       error: null,
       peers: [],
+      linkedPeers: {},
       messages: [],
       files: [],
       inCall: false,

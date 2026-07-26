@@ -10,8 +10,10 @@ function formatTime(ts: number) {
 
 export function ChatPanel() {
   const messages = useStore((s) => s.messages);
+  const linkedPeers = useStore((s) => s.linkedPeers);
   const [draft, setDraft] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
+  const hasLink = Object.values(linkedPeers).some(Boolean);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,7 +31,11 @@ export function ChatPanel() {
     <div className="chat">
       <div className="chat__messages">
         {messages.length === 0 && (
-          <p className="chat__empty">No messages yet. Say hello 👋</p>
+          <p className="chat__empty">
+            {hasLink
+              ? 'No messages yet. Say hello — chat is peer-to-peer over WebRTC.'
+              : 'Waiting for a peer data link… chat will flow directly between browsers.'}
+          </p>
         )}
         {messages.map((m) => (
           <div key={m.id} className={`bubble ${m.mine ? 'bubble--mine' : ''}`}>

@@ -9,13 +9,19 @@
     "server"
   ],
   "scripts": {
-    "dev": "concurrently -n server,client -c magenta,cyan \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:server": "npm --workspace @hand-off/server run dev",
+    "dev": "concurrently -n bff,client -c magenta,cyan \"npm:dev:bff\" \"npm:dev:client\"",
+    "dev:all": "concurrently -n signaling,bff,client -c yellow,magenta,cyan \"npm:dev:signaling\" \"npm:dev:bff\" \"npm:dev:client\"",
+    "dev:signaling": "npm --prefix ../hand-off-server run dev",
+    "dev:bff": "npm --workspace @hand-off/server run dev",
+    "dev:server": "npm run dev:bff",
     "dev:client": "npm --workspace @hand-off/client run dev",
     "build": "npm --workspace @hand-off/client run build",
     "start": "npm --workspace @hand-off/server run start",
     "lint": "npm --workspace @hand-off/client run lint",
     "test": "npm --workspace @hand-off/client run test"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

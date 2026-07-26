@@ -23,6 +23,7 @@ export default function Room() {
   const error = useStore((s) => s.error);
   const self = useStore((s) => s.self);
   const peers = useStore((s) => s.peers);
+  const linkedPeers = useStore((s) => s.linkedPeers);
   const inCall = useStore((s) => s.inCall);
 
   const [tab, setTab] = useState<Tab>('chat');
@@ -100,9 +101,10 @@ export default function Room() {
           <ul className="sidebar__people">
             {participants.map((p) => (
               <li key={p.id}>
-                <span className="dot" />
+                <span className={`dot ${!p.me && linkedPeers[p.id] ? 'dot--linked' : ''}`} />
                 {p.username}
                 {p.me && <span className="tag">you</span>}
+                {!p.me && linkedPeers[p.id] && <span className="tag">linked</span>}
               </li>
             ))}
           </ul>
@@ -110,6 +112,12 @@ export default function Room() {
             <p className="sidebar__hint">
               You’re the only one here. Share the invite link or open a second
               browser tab to connect a peer.
+            </p>
+          )}
+          {peers.length > 1 && (
+            <p className="sidebar__hint">
+              Signaling supports one active peer link at a time. Chat, files, and
+              calls use the linked peer.
             </p>
           )}
         </aside>
