@@ -69,10 +69,43 @@ Open http://localhost:5173, pick a display name and room, then open a second tab
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `ROOM_TOKEN_SECRET` | BFF + hand-off-server | Shared HS256 secret for room JWTs |
-| `SIGNALING_URL` | BFF | Advertised signaling base URL in `/api/session` |
+| `ROOM_TOKEN_SECRET` | BFF / Vercel / Netlify + hand-off-server | Shared HS256 secret for room JWTs |
+| `SIGNALING_URL` | BFF / serverless | Advertised signaling base URL in `/api/session` |
 | `VITE_SIGNALING_URL` | client build | Absolute Socket.IO URL (production) |
 | `VITE_API_URL` | client build | Absolute BFF URL when not same-origin |
+
+## Deploy on Vercel
+
+Vercel serves `client/dist` as static files and runs the session BFF as a
+serverless function at `/api/session` (`api/session.js`). Signaling still lives
+on `hand-off-server`.
+
+1. Deploy / run `hand-off-server` somewhere (Render, etc.) with:
+   - `ROOM_TOKEN_SECRET=<strong-secret>`
+   - `ALLOWED_ORIGINS=https://your-app.vercel.app`
+   - `NODE_ENV=production`
+2. Import this GitHub repo into [Vercel](https://vercel.com/new).
+3. In the Vercel project settings, set:
+
+| Environment | Variable | Value |
+| --- | --- | --- |
+| Production (Build) | `VITE_SIGNALING_URL` | `https://your-hand-off-server.example.com` |
+| Production (Runtime) | `ROOM_TOKEN_SECRET` | same secret as hand-off-server |
+| Production (Runtime) | `SIGNALING_URL` | same URL as `VITE_SIGNALING_URL` |
+
+4. Framework Preset: **Other** (or leave unset — `vercel.json` sets it).
+5. Deploy. Smoke-check:
+   - `GET https://your-app.vercel.app/` → SPA
+   - `POST https://your-app.vercel.app/api/session` with
+     `{"roomId":"demo","username":"Ada"}` → JWT JSON
+6. Open two browser tabs on the deployed site and join the same room.
+
+CLI alternative:
+
+```bash
+npx vercel          # preview
+npx vercel --prod   # production
+```
 
 ## License
 
