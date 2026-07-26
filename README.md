@@ -4,38 +4,51 @@
 
 HandOff lets people in a shared room message each other, jump on a live
 audio/video call, and send files that stream **directly between browsers** over
-WebRTC. A lightweight signaling server handles presence, chat relay, and the
-WebRTC handshake; media and files never touch the server.
+WebRTC. Signaling (presence + call/ICE) is handled by
+[`hand-off-server`](https://github.com/gravy17/hand-off-server); media, chat, and
+file bytes never touch the server.
 
 Live demo (legacy build): https://hand-off.netlify.app/
 
 ## Architecture
 
-This is an npm-workspaces monorepo:
+This is an npm-workspaces monorepo that pairs with the external signaling server:
 
 | Package | Path | Stack | Responsibility |
 | --- | --- | --- | --- |
-| `@hand-off/client` | `client/` | React 18 · TypeScript · Vite · Zustand · React Router 6 | UI + WebRTC mesh + data-channel file transfer |
-| `@hand-off/server` | `server/` | Node · Express · Socket.IO 4 | Rooms, presence, chat relay, WebRTC signaling relay |
+| `@hand-off/client` | `client/` | React 18 · TypeScript · Vite · Zustand · React Router 6 | UI + WebRTC + data-channel chat/files |
+| `@hand-off/server` | `server/` | Node · Express | Session BFF — mints room JWTs; serves `client/dist` |
+| `hand-off-server` | separate repo | Socket.IO 4 · JWT rooms | Presence + 1:1 call/ICE signaling |
 
-- **Chat & presence** are relayed through Socket.IO (reliable, instant).
-- **Audio/video calls** use native `RTCPeerConnection` in a full mesh with the
-  [perfect-negotiation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
-  pattern, so either peer can (re)negotiate when tracks are added/removed.
-- **File sharing** streams chunks over a reliable `RTCDataChannel` per peer,
-  with backpressure handling and progress reporting.
+- **Presence & call signaling** go through `hand-off-server` (JWT auth, `call:*` / `signal:ice`).
+- **Chat & file bytes** travel only on a reliable `RTCDataChannel` (no Socket.IO data plane).
+- **Audio/video** uses `replaceTrack` on pre-created transceivers so media can start after the
+  data link without mid-call SDP renegotiation (the signaling API has no mid-call SDP path).
 
-In development the Vite dev server proxies `/socket.io` to the signaling server,
-so the client connects same-origin (no CORS). In production the server can serve
-the built client from `client/dist`.
+In development the Vite dev server proxies `/api` → session BFF and `/socket.io` →
+`hand-off-server`, so the browser stays same-origin.
 
 ## Getting started
 
-Requires **Node.js 18+** (developed on Node 22).
+Requires **Node.js 18+** (developed on Node 22), plus a running
+[`hand-off-server`](https://github.com/gravy17/hand-off-server) instance.
 
 ```bash
-npm install        # installs both workspaces
-npm run dev        # starts the signaling server (:4000) and Vite client (:5173)
+# terminal A — signaling (from the hand-off-server checkout)
+export ROOM_TOKEN_SECRET='dev-room-token-secret-change-me'
+export ALLOWED_ORIGINS='http://localhost:5173'
+npm start   # :8989
+
+# terminal B — this repo
+cp .env.example .env   # optional; defaults match the secret above
+npm install
+npm run dev            # BFF :4000 + Vite :5173
+```
+
+If both repos are siblings (`../hand-off-server`), you can start everything with:
+
+```bash
+npm run dev:all
 ```
 
 Open http://localhost:5173, pick a display name and room, then open a second tab
@@ -45,11 +58,21 @@ Open http://localhost:5173, pick a display name and room, then open a second tab
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Run server + client together (hot reload) |
+| `npm run dev` | Run session BFF + Vite client |
+| `npm run dev:all` | Also start sibling `hand-off-server` |
 | `npm run build` | Type-check and build the client to `client/dist` |
-| `npm start` | Run the signaling server (serves `client/dist` if built) |
+| `npm start` | Run the session BFF (serves `client/dist` if built) |
 | `npm run lint` | ESLint over the client |
 | `npm test` | Vitest unit tests |
+
+## Environment
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `ROOM_TOKEN_SECRET` | BFF + hand-off-server | Shared HS256 secret for room JWTs |
+| `SIGNALING_URL` | BFF | Advertised signaling base URL in `/api/session` |
+| `VITE_SIGNALING_URL` | client build | Absolute Socket.IO URL (production) |
+| `VITE_API_URL` | client build | Absolute BFF URL when not same-origin |
 
 ## License
 

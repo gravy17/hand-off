@@ -7,7 +7,7 @@ import { DownloadIcon, PaperclipIcon } from './icons';
 
 export function FilePanel() {
   const files = useStore((s) => s.files);
-  const peers = useStore((s) => s.peers);
+  const linkedPeers = useStore((s) => s.linkedPeers);
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +23,7 @@ export function FilePanel() {
     }
   }
 
-  const canShare = peers.length > 0;
+  const canShare = Object.values(linkedPeers).some(Boolean);
 
   return (
     <div className="files">
@@ -32,7 +32,7 @@ export function FilePanel() {
           className="btn btn--primary"
           onClick={() => inputRef.current?.click()}
           disabled={!canShare}
-          title={canShare ? 'Send a file to everyone in the room' : 'Waiting for peers to join'}
+          title={canShare ? 'Send a file over the WebRTC data channel' : 'Waiting for a peer data link'}
         >
           <PaperclipIcon /> Send a file
         </button>
@@ -43,7 +43,7 @@ export function FilePanel() {
           hidden
           onChange={(e) => onPick(e.target.files)}
         />
-        {!canShare && <span className="files__note">Waiting for a peer to join…</span>}
+        {!canShare && <span className="files__note">Waiting for a peer data link…</span>}
       </div>
 
       {error && <p className="files__error">{error}</p>}
@@ -56,6 +56,7 @@ export function FilePanel() {
               <span className="filecard__name" title={f.name}>{f.name}</span>
               <span className="filecard__meta">
                 {formatBytes(f.size)} · {f.direction === 'outgoing' ? 'sent' : `from ${f.fromName}`}
+                {f.error ? ` · ${f.error}` : ''}
               </span>
               {!f.done && (
                 <div className="progress">
@@ -69,8 +70,8 @@ export function FilePanel() {
               </a>
             )}
             {f.direction === 'outgoing' && (
-              <span className={`badge ${f.done ? 'badge--ok' : ''}`}>
-                {f.done ? 'Sent' : `${Math.round(f.progress * 100)}%`}
+              <span className={`badge ${f.done && !f.error ? 'badge--ok' : ''}`}>
+                {f.error ? 'Failed' : f.done ? 'Sent' : `${Math.round(f.progress * 100)}%`}
               </span>
             )}
           </li>

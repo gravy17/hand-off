@@ -15,14 +15,21 @@ export function CallStage() {
   const camEnabled = useStore((s) => s.camEnabled);
   const self = useStore((s) => s.self);
   const peerName = useStore((s) => s.peerName);
+  const linkedPeers = useStore((s) => s.linkedPeers);
   const [error, setError] = useState<string | null>(null);
+  const hasLink = Object.values(linkedPeers).some(Boolean);
 
   async function start(withVideo: boolean) {
     setError(null);
     try {
       await session.startCall(withVideo);
-    } catch {
-      setError('Could not access your microphone/camera. Check permissions and devices.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      setError(
+        message && !/permission|NotAllowed|NotFound|devices/i.test(message)
+          ? message
+          : 'Could not access your microphone/camera. Check permissions and devices.',
+      );
     }
   }
 
@@ -31,12 +38,16 @@ export function CallStage() {
       <div className="callstage callstage--idle">
         <div className="callstage__cta">
           <h3>Start a live call</h3>
-          <p>Publish your mic and camera to everyone in the room.</p>
+          <p>
+            {hasLink
+              ? 'Publish your mic and camera to your linked peer over WebRTC.'
+              : 'Waiting for a peer data link before a call can start…'}
+          </p>
           <div className="callstage__buttons">
-            <button className="btn btn--primary" onClick={() => start(true)}>
+            <button className="btn btn--primary" onClick={() => start(true)} disabled={!hasLink}>
               <VideoIcon /> Video call
             </button>
-            <button className="btn btn--ghost" onClick={() => start(false)}>
+            <button className="btn btn--ghost" onClick={() => start(false)} disabled={!hasLink}>
               <PhoneIcon /> Audio only
             </button>
           </div>

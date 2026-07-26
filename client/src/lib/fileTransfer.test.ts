@@ -52,3 +52,20 @@ describe('Reassembler', () => {
     expect(r.progress).toBe(1);
   });
 });
+
+describe('StreamingReassembler (memory fallback)', () => {
+  it('finalizes a blob after async pushes', async () => {
+    const { StreamingReassembler } = await import('./fileTransfer');
+    const r = await StreamingReassembler.create({
+      id: 'stream-1',
+      name: 'note.txt',
+      size: 5,
+      mime: 'text/plain',
+    });
+    await r.push(new TextEncoder().encode('hello').buffer);
+    expect(r.progress).toBe(1);
+    const blob = await r.finalize();
+    expect(blob.size).toBe(5);
+    expect(await blob.text()).toBe('hello');
+  });
+});

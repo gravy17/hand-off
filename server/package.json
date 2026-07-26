@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "HandOff signaling server: rooms, presence, chat relay, and WebRTC signaling.",
+  "description": "HandOff session BFF: mints room JWTs for hand-off-server and serves the built client.",
   "main": "src/index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
@@ -12,6 +12,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.1",
-    "socket.io": "^4.8.1"
+    "jsonwebtoken": "^9.0.2"
   }
 }
