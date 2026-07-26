@@ -5,15 +5,16 @@ import jwt from 'jsonwebtoken';
  * Shared room-JWT mint used by the Express BFF and serverless adapters.
  * @returns {{ ok: true, status: number, body: object } | { ok: false, status: number, body: { error: string } }}
  */
-export function mintSession(
-  { roomId, username, userId } = {},
-  {
+export function mintSession(body, options) {
+  // Default params only cover `undefined`; express.json()/JSON.parse can yield `null`.
+  const { roomId, username, userId } = body || {};
+  const {
     roomTokenSecret = process.env.ROOM_TOKEN_SECRET || '',
     tokenTtlSeconds = Number(process.env.TOKEN_TTL_SECONDS) || 900,
     signalingUrl = process.env.SIGNALING_URL || process.env.VITE_SIGNALING_URL || '',
     allowDevSecret = false,
-  } = {},
-) {
+  } = options || {};
+
   const secret =
     roomTokenSecret ||
     (allowDevSecret ? 'dev-room-token-secret-change-me' : '');

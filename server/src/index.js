@@ -33,7 +33,7 @@ app.get('/health', (_req, res) => {
  * POST /api/session  body: { roomId, username, userId? }
  */
 app.post('/api/session', (req, res) => {
-  const result = mintSession(req.body, {
+  const result = mintSession(req.body || {}, {
     signalingUrl: SIGNALING_URL,
     allowDevSecret: !isProd,
   });
