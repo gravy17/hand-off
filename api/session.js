@@ -1,6 +1,6 @@
 /**
  * Vercel serverless adapter for the session BFF.
- * Same contract as Express POST /api/session and the Netlify function.
+ * Same contract as Express POST /api/session.
  */
 import { mintSession } from '../server/src/mintSession.js';
 
