@@ -9,6 +9,7 @@ HandOff is an npm-workspaces monorepo for a peer-to-peer chat / audio-video call
 ### Services
 - `@hand-off/client` (`client/`) — React 18 + TypeScript + Vite dev server on **:5173**.
 - `@hand-off/server` (`server/`) — Express session BFF on **:4000** (mints room JWTs; no Socket.IO).
+- `api/session.js` — same mint endpoint as a Vercel serverless function (`vercel.json`).
 - `hand-off-server` (sibling repo) — authenticated signaling on **:8989**.
 
 Run BFF + client with `npm run dev`. When `../hand-off-server` exists,
